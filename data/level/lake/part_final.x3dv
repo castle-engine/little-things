@@ -1,0 +1,21 @@
+#X3D V3.2 utf8
+PROFILE Interchange
+
+# Camera settings "encoded" in the VRML/X3D declaration below :
+# direction 0.53492951393127441 -0.25325137376785278 0.80604839324951172
+# up 0.14003729820251465 0.96740043163299561 0.21101145446300507
+# gravityUp 0 1 0
+Viewpoint {
+  position -7.2553071975708008 1 -48.658176422119141
+  orientation -0.038481418043375015 -0.99108219146728516 -0.1275758296251297 2.5606200695037842
+}
+
+DEF DogTransform Transform {
+  translation 59.163066864013672 0.99999994039535522 21.113365173339844
+  children Sound {
+    source DEF AudioRightBottom AudioClip {
+      url "../../sounds/dog_barking_mono.wav"
+      loop TRUE
+    }
+  }
+}

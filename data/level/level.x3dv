@@ -1,0 +1,167 @@
+#X3D V3.2 utf8
+PROFILE Interchange
+
+# Main level file.
+# Defines lights, screen effect, water surface.
+# In case of this game, it does *not* contain actual geometry (that is rendered with outline).
+
+DirectionalLight { direction -1 -1 -1 global TRUE }
+DirectionalLight { direction  1  1  1 global TRUE }
+
+EXTERNPROTO PlaneTesselated [
+  inputOutput SFBool solid
+] [ "useful_proto_plane_tess.x3dv#PlaneTesselated" ]
+EXTERNPROTO PlaneNotTesselated [
+  inputOutput SFBool solid
+] [ "useful_proto_plane_tess.x3dv#PlaneNotTesselated" ]
+
+# Viewpoint {
+#   position 0 2 0
+# }
+
+# Camera settings "encoded" in the VRML/X3D declaration below :
+# direction 0.97043538093566895 2.5680629497926155E-14 0.24136105179786682
+# up -4.2419074475219531E-8 1 -1.0550237128370554E-8
+# gravityUp 0 1 0
+DEF View Viewpoint {
+  position -20.992977142333984 1 5.7650718688964844
+  orientation 2.6462998255921168E-14 -1 0 1.8145643472671509
+}
+
+KambiNavigationInfo {
+  type [ "WALK", "ANY" ]
+  avatarSize [ 0.3 0.8 ]
+  speed 5
+  headlight TRUE
+  headlightNode PointLight {
+    color 1 1 0
+  }
+  visibilityLimit 120
+  #visibilityLimit 26
+}
+
+DEF PaintedEffect ScreenEffect {
+  shaders ComposedShader {
+    language "GLSL"
+    #  initializeOnly SFNode brushAir ImageTexture { url "brushes/air.png" }
+    initializeOnly SFNode brushThin ImageTexture { url "brushes/thin.png" }
+    # initializeOnly SFNode brushPepper ImageTexture { url "brushes/pepper.png" }
+    parts ShaderPart { type "FRAGMENT" url "data:text/plain,
+ivec2 screen_position();
+vec4 screen_get_color(ivec2 position);
+// uniform sampler2D brushAir;
+ uniform sampler2D brushThin;
+//uniform sampler2D brushPepper;
+void main (void)
+{
+  ivec2 pos = screen_position();
+  vec4 original_color = screen_get_color(pos);
+  float grayscale = (original_color.r + original_color.g + original_color.b) / 3.0;
+  #define SEGMENTS 3
+  vec4 color_alt = (ceil(original_color * SEGMENTS) - 0.5) / SEGMENTS;
+  //vec4(grayscale/2.0, grayscale/2.0, grayscale/2.0, original_color.a);
+  float scale =
+  //1.0;
+  clamp(grayscale, 0.5, 1.0);
+  gl_FragColor.rgb = mix(original_color, color_alt,
+   texture2D(
+  //brushAir
+  brushThin
+  //brushPepper
+  , vec2(scale * vec2(pos)/vec2(256.0))));
+}
+" } } }
+
+Collision {
+  proxy Transform {
+    scale 1000 1 1000
+    children Transform {
+      rotation 1 0 0 1.57
+      children Shape {
+        geometry PlaneNotTesselated { }
+      }
+    }
+  }
+  # do not collide with children, as it will move with player anyway
+  children DEF WaterTransform Transform {
+    translation 0 0 0
+    children Transform {
+      rotation 1 0 0 1.57
+      children Shape {
+        shading "PHONG"
+        appearance Appearance {
+          material DEF MA_Material Material {
+            diffuseColor 0.5 0.5 1
+            specularColor 0 0 0
+            shininess 2
+            transparency 0.2
+          }
+          effects [
+            Effect {
+              language "GLSL"
+              initializeOnly SFNode normalMap
+                MovieTexture { url "baked_normals_low_res_seamless/baked_normals_@counter(4).png" loop TRUE }
+              parts [
+                EffectPart { type "VERTEX" url "water_shaders/water_normal.vs" }
+                EffectPart { type "FRAGMENT" url "water_shaders/water_normal.fs" }
+              ]
+            }
+
+            DEF ReflectRefractEffect Effect {
+              language "GLSL"
+              initializeOnly SFNode envMap
+                DEF GenTex1 GeneratedCubeMapTexture {
+                  update "ALWAYS"
+                  #update "NEXT_FRAME_ONLY"
+                  size 512
+                }
+              inputOutput SFMatrix3f cameraRotationInverseMatrix
+                1 0 0
+                0 1 0
+                0 0 1
+              parts [
+                EffectPart { type "VERTEX" url "water_shaders/water_reflect_refract.vs" }
+                EffectPart { type "FRAGMENT" url "water_shaders/water_reflect_refract.fs" }
+              ]
+            }
+          ]
+        }
+        geometry PlaneTesselated { solid FALSE }
+      }
+    }
+  }
+}
+
+ROUTE View.cameraRotationInverseMatrix TO ReflectRefractEffect.cameraRotationInverseMatrix
+
+# Transform {
+#   scale 10 1 10
+#   children Inline { url "test_terrain.x3dv" }
+# }
+
+# ----------------------------------------------------------------------------
+# It is easiest to keep all backgrounds in main level file, to bind them from code
+
+DEF Backgroundforest Background {
+  backUrl "sky/foggy_sky_back.png"
+  bottomUrl "sky/foggy_sky_bottom.png"
+  frontUrl "sky/foggy_sky_front.png"
+  leftUrl "sky/foggy_sky_left.png"
+  rightUrl "sky/foggy_sky_right.png"
+  topUrl "sky/foggy_sky_top.png"
+}
+
+DEF Backgroundlake Background {
+  backUrl "sky/sky_lake_back.png"
+  bottomUrl "sky/sky_lake_bottom.png"
+  frontUrl "sky/sky_lake_front.png"
+  leftUrl "sky/sky_lake_left.png"
+  rightUrl "sky/sky_lake_right.png"
+  topUrl "sky/sky_lake_top.png"
+}
+
+DEF Backgroundisland Background {
+}
+
+DEF Backgroundcave Background {
+}

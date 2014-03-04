@@ -1,0 +1,6 @@
+Compiling:
+
+- Standalone (Linux, Windows, MacOSX, FreeBSD...):
+  You just need FPC (Free Pascal Compiler), version >= 2.6.0,
+  from freepascal.org or your Linux distro package manager.
+  Run "make" in this directory to compile.

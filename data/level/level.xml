@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<level
+  name="water"
+  scene="level.x3dv"
+  title="Water"
+  number="1"
+  type="Level"
+  placeholders="blender"
+  music_sound="sea_music"
+>
+</level>

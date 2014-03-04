@@ -1,0 +1,29 @@
+#X3D V3.2 utf8
+PROFILE Interchange
+
+# Fog {
+#   color 0 0 0
+#   visibilityRange 200
+#   fogType "EXPONENTIAL"
+# }
+
+# Camera settings "encoded" in the VRML/X3D declaration below :
+# direction 0.97043538093566895 2.5680629497926155E-14 0.24136105179786682
+# up -4.2419074475219531E-8 1 -1.0550237128370554E-8
+# gravityUp 0 1 0
+Viewpoint {
+  position -20.992977142333984 1 5.7650718688964844
+  orientation 2.6462998255921168E-14 -1 0 1.8145643472671509
+}
+
+Inline { url "part.x3d" }
+
+DEF DogTransform Transform {
+  translation 80.807708740234375 0.69120168685913086 36.978706359863281
+  children Sound {
+    source DEF AudioRightBottom AudioClip {
+      url "../../sounds/dog_barking_mono.wav"
+      loop TRUE
+    }
+  }
+}
