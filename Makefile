@@ -24,7 +24,7 @@ clean:
 	$(MAKE) -C ../castle_game_engine/ clean
 
 FILES := --exclude *.xcf --exclude '*.blend*' README.txt data/
-WINDOWS_FILES := $(FILES) little_things.exe *.dll
+WINDOWS_FILES := $(FILES) little_things.exe ../www/pack/win32_dlls/*.dll
 UNIX_FILES    := $(FILES) little_things
 
 .PHONY: release-win32

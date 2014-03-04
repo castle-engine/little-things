@@ -15,9 +15,28 @@
 
 {$apptype GUI}
 
+{ "Little Things" standalone game binary. }
 program little_things;
-uses CastleWindow, CastleConfig, Game;
+uses CastleWindow, CastleConfig, Game, CastleParameters, CastleLog, CastleUtils;
+
+const
+  Options: array [0..0] of TOption =
+  (
+    (Short:  #0; Long: 'debug-log'; Argument: oaNone)
+  );
+
+procedure OptionProc(OptionNum: Integer; HasArgument: boolean;
+  const Argument: string; const SeparateArgs: TSeparateArgs; Data: Pointer);
 begin
+  case OptionNum of
+    0: InitializeLog;
+    else raise EInternalError.Create('OptionProc');
+  end;
+end;
+
+begin
+  Parameters.Parse(Options, @OptionProc, nil);
+
   Config.Load;
   Application.Initialize;
   Window.OpenAndRun;

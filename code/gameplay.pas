@@ -42,7 +42,7 @@ implementation
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleWarnings, CastleSceneCore, CastleBoxes, CastleTimeUtils,
-  CastleGL, CastleGLUtils, CastleGLShaders,
+  CastleGL, CastleGLUtils, CastleGLShaders, Game,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise;
 
@@ -597,7 +597,10 @@ begin
     TerrainTransform.FdTranslation.Changed;
     Writeln(FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
   end;
-
+  if Event.IsKey(K_F5) then
+  begin
+    Window.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
+  end;
 end;
 
 end.

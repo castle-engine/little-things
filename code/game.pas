@@ -16,8 +16,6 @@
 { Implements the game logic, independent from Android / standalone. }
 unit Game;
 
-{$define DEBUG}
-
 interface
 
 uses CastleWindowTouch;
@@ -38,10 +36,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
 { One-time initialization. }
 procedure ApplicationInitialize;
 begin
-  {$ifndef MSWINDOWS} { Under Windows, log requires stderr. }
-  //InitializeLog;
   OnWarning := @OnWarningWrite;
-  {$endif}
 
   GeneratedCubeMapBias := Vector3Single(0, -1, 0);
   Progress.UserInterface := WindowProgressInterface;
