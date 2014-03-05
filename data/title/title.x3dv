@@ -1,0 +1,103 @@
+#X3D V3.2 utf8
+PROFILE Interchange
+
+# Title screen, with water copied from main level.
+
+DirectionalLight { direction -1 -1 -1 global TRUE }
+DirectionalLight { direction  1  1  1 global TRUE }
+
+# Camera settings "encoded" in the VRML/X3D declaration below :
+# direction -1.9555907580447141E-16 -1.6420282136357959E-15 -1
+# up 0 1 4.3711388286737929E-8
+# gravityUp 0 1 0
+DEF View Viewpoint {
+  position -0.19434870779514313 1.750255823135376 21.667678833007813
+  orientation 0 0 1 0
+}
+
+EXTERNPROTO PlaneTesselated [
+  inputOutput SFBool solid
+] [ "../level/useful_proto_plane_tess.x3dv#PlaneTesselated" ]
+
+Transform {
+  translation 0 0 0
+  children Transform {
+    rotation 1 0 0 1.57
+    children Shape {
+      shading "PHONG"
+      appearance Appearance {
+        material DEF MA_Material Material {
+          diffuseColor 0.5 0.5 1
+          specularColor 0 0 0
+          shininess 2
+          transparency 0.2
+        }
+        effects [
+          Effect {
+            language "GLSL"
+            initializeOnly SFNode normalMap
+              MovieTexture { url "../level/baked_normals_low_res_seamless/baked_normals_@counter(4).png" loop TRUE }
+            parts [
+              EffectPart { type "VERTEX" url "../level/water_shaders/water_normal.vs" }
+              EffectPart { type "FRAGMENT" url "../level/water_shaders/water_normal.fs" }
+            ]
+          }
+
+          DEF ReflectRefractEffect Effect {
+            language "GLSL"
+            initializeOnly SFNode envMap
+              DEF GenTex1 GeneratedCubeMapTexture {
+                update "ALWAYS"
+                #update "NEXT_FRAME_ONLY"
+                size 512
+              }
+            inputOutput SFMatrix3f cameraRotationInverseMatrix
+              1 0 0
+              0 1 0
+              0 0 1
+            parts [
+              EffectPart { type "VERTEX" url "../level/water_shaders/water_reflect_refract.vs" }
+              EffectPart { type "FRAGMENT" url "../level/water_shaders/water_reflect_refract.fs" }
+            ]
+          }
+        ]
+      }
+      geometry PlaneTesselated { solid FALSE }
+    }
+  }
+}
+
+ROUTE View.cameraRotationInverseMatrix TO ReflectRefractEffect.cameraRotationInverseMatrix
+
+Background {
+  backUrl "../level/sky/sky_lake_back.png"
+  bottomUrl "../level/sky/sky_lake_bottom.png"
+  frontUrl "../level/sky/sky_lake_front.png"
+  leftUrl "../level/sky/sky_lake_left.png"
+  rightUrl "../level/sky/sky_lake_right.png"
+  topUrl "../level/sky/sky_lake_top.png"
+}
+
+Transform { scale 30 30 30
+  children Shape {
+    appearance Appearance {
+      texture ImageTexture { url "../title/title.png" }
+    }
+    geometry IndexedFaceSet {
+      texCoord TextureCoordinate {
+        point [
+          0 0,
+          0 1,
+          1 1,
+          1 0 ] }
+      creaseAngle 0.000000
+      coord Coordinate {
+        point [
+          -1 -1 0,
+          -1  1 0,
+           1  1 0,
+           1 -1 0 ] }
+      coordIndex [ 3 2 1 0 ]
+    }
+  }
+}

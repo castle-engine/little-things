@@ -31,7 +31,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
   CastleRenderer, Castle3D, CastlePrecalculatedAnimation, CastleLevels, CastlePlayer,
   CastleUIControls, CastleSoundEngine,
-  GamePlay;
+  GamePlay, GamePlayer, GameTitle;
 
 { One-time initialization. }
 procedure ApplicationInitialize;
@@ -56,22 +56,27 @@ end;
 
 procedure WindowOpen(Container: TUIContainer);
 begin
-  StartGame;
+  StartPlayer;
+  StartTitleScreen;
 end;
 
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
 begin
-  GamePress(Event);
+  if TitleScreen then
+    TitlePress(Event) else
+    GamePress(Event);
 end;
 
 procedure WindowUpdate(Container: TUIContainer);
 begin
-  GameUpdate(Window.Fps.UpdateSecondsPassed);
+  if not TitleScreen then
+    GameUpdate(Window.Fps.UpdateSecondsPassed);
 end;
 
 procedure WindowRender(Container: TUIContainer);
 begin
-  GameRender;
+  if not TitleScreen then
+    GameRender;
 end;
 
 initialization

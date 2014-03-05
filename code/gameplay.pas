@@ -27,9 +27,6 @@ type
 const
   PartNames: array [TPart] of string = ('forest', 'cave', 'lake', 'island');
 
-var
-  SceneManager: TGameSceneManager;
-
 procedure LoadPart(const Part: TPart);
 
 procedure StartGame;
@@ -42,12 +39,11 @@ implementation
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleWarnings, CastleSceneCore, CastleBoxes, CastleTimeUtils,
-  CastleGL, CastleGLUtils, CastleGLShaders, Game,
+  CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise;
 
 var
-  Player: TPlayer; //< same thing as Window.SceneManager.Player
   DefaultMoveSpeed: Single;
   VisibilityLimit: Single;
   RenderDebug3D: boolean;
@@ -353,16 +349,13 @@ procedure StartGame;
 var
   Avatar: TCastlePrecalculatedAnimation;
 begin
+  TitleScreen := false;
+
   SeedDirection := Random(High(LongInt));
   SeedSpeed := Random(High(LongInt));
 
-  Player := TPlayer.Create(SceneManager);
   Player.Camera.MouseLook := true;
-  Player.Camera.RotationHorizontalPivot := 5;
-//  Player.Flying := true; // no gravity
-  SceneManager.Items.Add(Player);
-  SceneManager.Player := Player;
-  SceneManager.OnMoveAllowed := @TGame(nil).MoveAllowed;
+  Player.Blocked := false;
 
   PlayerInput_LeftStrafe.MakeClear;
   PlayerInput_RightStrafe.MakeClear;
@@ -371,6 +364,7 @@ begin
   PlayerInput_Crouch.MakeClear;
 
   SceneManager.LoadLevel('water');
+  SceneManager.OnMoveAllowed := @TGame(nil).MoveAllowed;
   SceneManager.UseGlobalLights := true;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   SceneManager.MainScene.Collides := false;
