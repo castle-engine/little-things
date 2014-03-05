@@ -74,7 +74,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_sand_png"
-							              url='"/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/textures/sand.png" "sand.png" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/island/../textures/sand.png"'
+							              url='"../textures/sand.png" "sand.png"'
 							              />
 							<Material DEF="MA_Material"
 							          diffuseColor="0.718 0.800 0.000"

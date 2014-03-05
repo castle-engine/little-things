@@ -68,7 +68,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_trees_bark_002_col"
-							              url='"tree_model/textures/trees_bark_002_col.jpg" "trees_bark_002_col.jpg" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/forest/tree_model/textures/trees_bark_002_col.jpg"'
+							              url='"tree_model/textures/trees_bark_002_col.jpg" "trees_bark_002_col.jpg" "/home/michalis/sources/castle-engine/trunk/little_things/data/level/forest/tree_model/textures/trees_bark_002_col.jpg"'
 							              />
 							<Material DEF="MA_tree_brown"
 							          diffuseColor="0.800 0.800 0.800"
@@ -205,7 +205,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_trees_bark_001_col"
-							              url='"tree_model/textures/trees_bark_001_col.jpg" "trees_bark_001_col.jpg" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/forest/tree_model/textures/trees_bark_001_col.jpg"'
+							              url='"tree_model/textures/trees_bark_001_col.jpg" "trees_bark_001_col.jpg" "/home/michalis/sources/castle-engine/trunk/little_things/data/level/forest/tree_model/textures/trees_bark_001_col.jpg"'
 							              />
 							<Material DEF="MA_trees_bark_001"
 							          diffuseColor="0.756 0.584 0.268"
@@ -2349,7 +2349,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_tree_stumps_col"
-							              url='"tree_model/textures/tree_stumps_col.jpg" "tree_stumps_col.jpg" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/forest/tree_model/textures/tree_stumps_col.jpg"'
+							              url='"tree_model/textures/tree_stumps_col.jpg" "tree_stumps_col.jpg" "/home/michalis/sources/castle-engine/trunk/little_things/data/level/forest/tree_model/textures/tree_stumps_col.jpg"'
 							              />
 							<Material DEF="MA_tree_stump"
 							          diffuseColor="1.000 0.800 0.800"
@@ -2988,7 +2988,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_trees_log_001_col"
-							              url='"tree_model/textures/trees_log_001_col.png" "trees_log_001_col.png" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/forest/tree_model/textures/trees_log_001_col.png"'
+							              url='"tree_model/textures/trees_log_001_col.png" "trees_log_001_col.png" "/home/michalis/sources/castle-engine/trunk/little_things/data/level/forest/tree_model/textures/trees_log_001_col.png"'
 							              />
 							<Material DEF="MA_log_001"
 							          diffuseColor="1.000 1.000 1.000"

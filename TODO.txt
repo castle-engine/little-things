@@ -1,5 +1,3 @@
-spiders look bad, not filled?
-rem spiders kanim, unused.
 dog barking cannot be heard, unknown when level finishes.
 Put intro at some visible place.
   write in intro to listen to dog barking,
