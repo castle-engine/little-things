@@ -42,7 +42,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_baked_png_001"
-							              url='"/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/creatures/spider/baked.png" "baked.png" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/cave/../../creatures/spider/baked.png"'
+							              url='"../../creatures/spider/baked.png" "baked.png"'
 							              />
 							<Material DEF="MA_Material_001"
 							          diffuseColor="0.170 0.800 0.263"
@@ -219,7 +219,7 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_baked_png"
-							              url='"baked.png" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/level/cave/baked.png"'
+							              url='"baked.png"'
 							              />
 							<Material DEF="MA_Material"
 							          diffuseColor="0.800 0.800 0.800"
