@@ -7,5 +7,6 @@
   type="Level"
   placeholders="blender"
   music_sound="sea_music"
+  loading_image="../loading_screen_3.png"
 >
 </level>
