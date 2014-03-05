@@ -38,7 +38,6 @@ procedure ApplicationInitialize;
 begin
   OnWarning := @OnWarningWrite;
 
-  GeneratedCubeMapBias := Vector3Single(0, -1, 0);
   Progress.UserInterface := WindowProgressInterface;
   SceneManager := Window.SceneManager;
 
