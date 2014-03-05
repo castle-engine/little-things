@@ -1,7 +1,9 @@
 dog barking cannot be heard, unknown when level finishes.
-Put intro at some visible place.
-  write in intro to listen to dog barking,
-  this may we'll also encourage to listen to music :)
+
+on title, just use the texture flipped, no need for cubemap tricks
+
 on lake, the exit point has absolutely no visual mark.
+
 on island, the mirror looks just bad? darkness is Ok, level is not.
-Change it to just a tiny island, without terrain grid underneath?
+  Change it to just a tiny island, without terrain grid underneath?
+
