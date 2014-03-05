@@ -3,7 +3,7 @@
 <X3D version="3.0" profile="Immersive" xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance" xsd:noNamespaceSchemaLocation="http://www.web3d.org/specifications/x3d-3.0.xsd">
 	<head>
 		<meta name="filename" content="Spider.x3d" />
-		<meta name="generator" content="Blender 2.63 (sub 0)" />
+		<meta name="generator" content="Blender 2.69 (sub 0)" />
 	</head>
 	<Scene>
 		<NavigationInfo headlight="false"
@@ -74,7 +74,8 @@
 					<Shape>
 						<Appearance>
 							<ImageTexture DEF="IM_untitled"
-							              url='"baked.png" "/home/michalis/sources/tsg-gamejam2013/trunk/little_things/data/creatures/spider/baked.png"' 							              />
+							              url='"baked.png" "/home/michalis/sources/castle-engine/trunk/little_things/data/creatures/spider/baked.png"'
+							              />
 							<Material DEF="MA_Material"
 							          diffuseColor="0.170 0.800 0.263"
 							          specularColor="0.046 0.075 0.030"
@@ -106,7 +107,7 @@
 			<Viewpoint DEF="CA_Camera"
 			           centerOfRotation="0 0 0"
 			           position="-0.00 -0.00 -0.00"
-			           orientation="0.00 0.00 0.00 0.00"
+			           orientation="1.00 0.03 0.07 0.00"
 			           fieldOfView="0.858"
 			           />
 		</Transform>
