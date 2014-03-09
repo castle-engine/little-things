@@ -57,13 +57,13 @@ void main (void)
   ivec2 pos = screen_position();
   vec4 original_color = screen_get_color(pos);
   float grayscale = (original_color.r + original_color.g + original_color.b) / 3.0;
-  #define SEGMENTS 3
-  vec4 color_alt = (ceil(original_color * SEGMENTS) - 0.5) / SEGMENTS;
+  #define SEGMENTS 3.0
+  vec4 color_alt = (ceil(original_color * SEGMENTS) - vec4(0.5)) / SEGMENTS;
   //vec4(grayscale/2.0, grayscale/2.0, grayscale/2.0, original_color.a);
   float scale =
   //1.0;
   clamp(grayscale, 0.5, 1.0);
-  gl_FragColor.rgb = mix(original_color, color_alt,
+  gl_FragColor = mix(original_color, color_alt,
    texture2D(
   //brushAir
   brushThin
