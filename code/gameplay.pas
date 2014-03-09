@@ -534,8 +534,6 @@ begin
 end;
 
 procedure GamePress(const Event: TInputPressRelease);
-var
-  Pos, Dir, Up, GravityUp: TVector3Single;
 begin
   if Event.IsKey(K_1) then
     CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - 0.1;
@@ -558,15 +556,8 @@ begin
       LoadPart(Low(TPart)) else
       LoadPart(Succ(CurrentPart));
   end;
-  if Event.IsKey(K_7) then
-  begin
-    InitializeLog;
-    Player.Camera.GetView(Pos, Dir, Up, GravityUp);
-    WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
-  end;
   if Event.IsKey(K_8) then
     RenderDebug3D := not RenderDebug3D;
-
   if Event.IsKey(K_9) then
   begin
     TerrainTransform.FdScale.Value -= Vector3Single(0.5, 0.5, 0.5);

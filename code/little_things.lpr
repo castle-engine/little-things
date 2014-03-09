@@ -35,6 +35,8 @@ begin
 end;
 
 begin
+  Window.FullScreen := true;
+  Window.ParseParameters;
   Parameters.Parse(Options, @OptionProc, nil);
 
   Config.Load;
