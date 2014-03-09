@@ -38,27 +38,26 @@ Transform {
             initializeOnly SFNode normalMap
               MovieTexture { url "../level/baked_normals_low_res_seamless/baked_normals_@counter(4).png" loop TRUE }
             parts [
-              EffectPart { type "VERTEX" url "../level/water_shaders/water_normal.vs" }
-              EffectPart { type "FRAGMENT" url "../level/water_shaders/water_normal.fs" }
+              EffectPart { type "VERTEX" url "water_shaders/water_normal.vs" }
+              EffectPart { type "FRAGMENT" url "water_shaders/water_normal.fs" }
             ]
           }
 
           DEF ReflectRefractEffect Effect {
             language "GLSL"
-            initializeOnly SFNode envMap
-              DEF GenTex1 GeneratedCubeMapTexture {
-                update "ALWAYS"
-                #update "NEXT_FRAME_ONLY"
-                size 512
-                bias 0 0 5
-              }
             inputOutput SFMatrix3f cameraRotationInverseMatrix
               1 0 0
               0 1 0
               0 0 1
+            inputOutput SFMatrix4f cameraInverseMatrix
+              1 0 0 0
+              0 1 0 0
+              0 0 1 0
+              0 0 1 1
+            inputOutput SFNode reflectedTexture ImageTexture { url "title.png" }
             parts [
-              EffectPart { type "VERTEX" url "../level/water_shaders/water_reflect_refract.vs" }
-              EffectPart { type "FRAGMENT" url "../level/water_shaders/water_reflect_refract.fs" }
+              EffectPart { type "VERTEX" url "water_shaders/water_reflect_refract.vs" }
+              EffectPart { type "FRAGMENT" url "water_shaders/water_reflect_refract.fs" }
             ]
           }
         ]
@@ -69,6 +68,7 @@ Transform {
 }
 
 ROUTE View.cameraRotationInverseMatrix TO ReflectRefractEffect.cameraRotationInverseMatrix
+ROUTE View.cameraInverseMatrix TO ReflectRefractEffect.cameraInverseMatrix
 
 Background {
   backUrl "../level/sky/sky_lake_back.png"
@@ -82,7 +82,7 @@ Background {
 Transform { scale 30 30 30
   children Shape {
     appearance Appearance {
-      texture ImageTexture { url "../title/title.png" }
+      texture ImageTexture { url "title.png" }
     }
     geometry IndexedFaceSet {
       texCoord TextureCoordinate {
