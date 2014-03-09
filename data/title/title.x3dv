@@ -6,12 +6,14 @@ PROFILE Interchange
 DirectionalLight { direction -1 -1 -1 global TRUE }
 DirectionalLight { direction  1  1  1 global TRUE }
 
+NavigationInfo { type "EXAMINE" }
+
 # Camera settings "encoded" in the VRML/X3D declaration below :
-# direction -1.9555907580447141E-16 -1.6420282136357959E-15 -1
+# direction 0 0 -1
 # up 0 1 4.3711388286737929E-8
 # gravityUp 0 1 0
 DEF View Viewpoint {
-  position -0.19434870779514313 1.750255823135376 21.667678833007813
+  position -0.19434870779514313 1.6172535419464111 25.383121490478516
   orientation 0 0 1 0
 }
 

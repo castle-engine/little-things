@@ -2,7 +2,7 @@
 <level
   name="title"
   scene="title.x3dv"
-  title="title"
+  title="Title"
   number="0"
   type="Level"
   placeholders="blender"
