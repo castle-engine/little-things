@@ -25,5 +25,7 @@ DEF DogTransform Transform {
       url "../../sounds/dog_barking_mono.wav"
       loop TRUE
     }
+    minFront 10
+    maxFront 60
   }
 }
