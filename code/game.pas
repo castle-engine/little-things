@@ -56,7 +56,9 @@ end;
 procedure WindowOpen(Container: TUIContainer);
 begin
   StartPlayer;
-  StartTitleScreen;
+  if UseDebugPart then
+    StartGame else
+    StartTitleScreen;
 end;
 
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);

@@ -34,6 +34,10 @@ procedure GameUpdate(const SecondsPassed: Single);
 procedure GamePress(const Event: TInputPressRelease);
 procedure GameRender;
 
+var
+  UseDebugPart: boolean = false;
+  DebugPart: TPart = pIsland;
+
 implementation
 
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
@@ -64,6 +68,15 @@ const
   HeightOverAvatar = 2.0; // do not make it ultra-large, to allow swimming under passages
   WaterHeight = 0.0;
   MarginOverWater = 0.5;
+
+  PartConfig: array [TPart] of record
+    PaintedEffect: boolean;
+  end = (
+    { forest } (PaintedEffect: true),
+    { cave   } (PaintedEffect: false),
+    { lake   } (PaintedEffect: true),
+    { island } (PaintedEffect: false)
+  );
 
 { routines ------------------------------------------------------------------- }
 
@@ -303,7 +316,7 @@ begin
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   CurrentPartScene.Collides := false;
 
-  PaintedEffect.Enabled := Part <> pCave;
+  PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
 
   NewBackground := SceneManager.MainScene.RootNode.TryFindNodeByName(
     TAbstractBackgroundNode, 'Background' + PartName, false) as TAbstractBackgroundNode;
@@ -393,7 +406,9 @@ begin
 
   DefaultMoveSpeed := Player.Camera.MoveSpeed;
 
-  LoadPart(pForest);
+  if UseDebugPart then
+    LoadPart(DebugPart) else
+    LoadPart(Low(TPart));
 end;
 
 procedure GameUpdate(const SecondsPassed: Single);
