@@ -1,0 +1,18 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="dog_barking_mono_data" version="1.3.0" audacityversion="2.0.5" sel0="0.0000000000" sel1="0.0000000000" vpos="0" h="0.0000000000" zoom="132.5024015370" rate="44100.0">
+	<tags/>
+	<wavetrack name="dog_barking_mono" channel="2" linked="0" mute="0" solo="0" height="150" minimized="0" isSelected="1" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="374760">
+				<waveblock start="0">
+					<simpleblockfile filename="e00005d6.au" len="262144" min="-0.752045" max="0.74942" rms="0.115865"/>
+				</waveblock>
+				<waveblock start="262144">
+					<simpleblockfile filename="e00007e3.au" len="112616" min="-0.891113" max="0.77771" rms="0.072941"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+</project>
