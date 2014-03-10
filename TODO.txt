@@ -1,7 +1,0 @@
-dog barking cannot be heard, unknown when level finishes.
-
-on lake, the exit point has absolutely no visual mark.
-
-on island, the mirror looks just bad? darkness is Ok, level is not.
-  Change it to just a tiny island, without terrain grid underneath?
-
