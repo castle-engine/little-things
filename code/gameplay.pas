@@ -65,7 +65,7 @@ var
   SeedSpeed: Cardinal;
 
 const
-  HeightOverAvatar = 2.0; // do not make it ultra-large, to allow swimming under passages
+  HeightOverAvatar = 2.0; //< do not make it ultra-large, to allow swimming under passages
   WaterHeight = 0.0;
   MarginOverWater = 0.5;
 
@@ -114,23 +114,24 @@ begin
   Result := OverWater(Point, Height { ignore });
 end;
 
-function OverWaterAround(const Point: TVector3Single; const Margin: Single): boolean;
+function OverWaterAround(const Point: TVector3Single; const Margin: Single;
+  out Height: Single): boolean;
 var
   Side: TVector3Single;
 begin
   Side := VectorProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
   Result :=
     { to protect forward movement }
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2) and
+    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin                    , Height) and
+    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin    , Height) and
+    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin    , Height) and
+    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2, Height) and
+    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2, Height) and
 
     { to protect backward movement }
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2) and
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin) and
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin);
+    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2                , Height) and
+    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
+    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
     // OverWater(Point + Vector3Single(-Margin, 0, -Margin)) and
     // OverWater(Point + Vector3Single(-Margin, 0,  Margin)) and
     // OverWater(Point + Vector3Single( Margin, 0, -Margin)) and
@@ -140,6 +141,13 @@ begin
     // OverWater(Point + Vector3Single( Margin, 0,       0)) and
     // OverWater(Point + Vector3Single(      0, 0, -Margin)) and
     // OverWater(Point + Vector3Single(      0, 0,  Margin));
+end;
+
+function OverWaterAround(const Point: TVector3Single; const Margin: Single): boolean;
+var
+  Height: Single;
+begin
+  Result := OverWaterAround(Point, Margin, Height { ignore });
 end;
 
 function OverWaterFactor(const Point: TVector3Single): Single;
@@ -169,8 +177,8 @@ begin
   Allowed := Allowed and (not BecauseOfGravity);
   if Allowed then
   begin
-    if (not OverWater(AvatarPositionFromCamera(NewPosition), NewHeight)) and
-       (OverWater(AvatarPositionFromCamera(OldPosition), OldHeight) or
+    if (not OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater, NewHeight)) and
+       (OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater, OldHeight) or
         (OldHeight > NewHeight)) then
       Allowed := false;
   end;
@@ -316,7 +324,7 @@ begin
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   CurrentPartScene.Collides := false;
 
-  PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
+  PaintedEffect.Enabled := PartConfig[Part].PaintedEffect and not RenderDebug3D;
 
   NewBackground := SceneManager.MainScene.RootNode.TryFindNodeByName(
     TAbstractBackgroundNode, 'Background' + PartName, false) as TAbstractBackgroundNode;
@@ -431,8 +439,8 @@ procedure GameUpdate(const SecondsPassed: Single);
     OldPosition := Player.Camera.Position;
     NewPosition := OldPosition + WindMove;
 
-    if OverWater(AvatarPositionFromCamera(OldPosition)) and
-       OverWater(AvatarPositionFromCamera(NewPosition)) then
+    if OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater) and
+       OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater) then
       Player.Camera.Position := NewPosition;
   end;
 
@@ -499,9 +507,11 @@ var
   Margin: Single;
 begin
   {$ifndef OpenGLES} // TODO-es
-  { TODO: why is this not visible with screen effect visible? }
   if RenderDebug3D then
   begin
+    { TODO: why is this not visible with screen effect visible? }
+    PaintedEffect.Enabled := false;
+
     glLoadMatrix(RenderingCamera.Matrix);
     glPushAttrib(GL_ENABLE_BIT or GL_LIGHTING_BIT);
       GLEnableTexture(etNone);
