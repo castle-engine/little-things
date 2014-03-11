@@ -65,16 +65,19 @@ procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
 var
   Pos, Dir, Up, GravityUp: TVector3Single;
 begin
-  if Event.IsKey(K_7) then
+  if EnableDebugKeys(Container) then
   begin
-    InitializeLog;
-    Player.Camera.GetView(Pos, Dir, Up, GravityUp);
-    WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
+    if Event.IsKey(K_7) then
+    begin
+      InitializeLog;
+      Player.Camera.GetView(Pos, Dir, Up, GravityUp);
+      WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
+    end;
   end;
 
   if TitleScreen then
-    TitlePress(Event) else
-    GamePress(Event);
+    TitlePress(Container, Event) else
+    GamePress(Container, Event);
 end;
 
 procedure WindowUpdate(Container: TUIContainer);

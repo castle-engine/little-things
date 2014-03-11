@@ -20,7 +20,8 @@ unit GamePlay;
 
 interface
 
-uses CastleScene, Castle3D, X3DNodes, CastlePlayer, CastleLevels, CastleKeysMouse;
+uses CastleScene, Castle3D, X3DNodes, CastlePlayer, CastleLevels,
+  CastleKeysMouse, CastleUIControls;
 
 type
   TPart = (pForest, pCave, pLake, pIsland);
@@ -31,12 +32,14 @@ procedure LoadPart(const Part: TPart);
 
 procedure StartGame;
 procedure GameUpdate(const SecondsPassed: Single);
-procedure GamePress(const Event: TInputPressRelease);
+procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
 procedure GameRender;
 
 var
   UseDebugPart: boolean = false;
   DebugPart: TPart = pIsland;
+
+function EnableDebugKeys(Container: TUIContainer): boolean;
 
 implementation
 
@@ -558,59 +561,73 @@ begin
   {$endif}
 end;
 
-procedure GamePress(const Event: TInputPressRelease);
+procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
 begin
-  if Event.IsKey(K_1) then
-    CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - 0.1;
-  if Event.IsKey(K_2) then
-    CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale + 0.1;
-  if Event.IsKey(K_3) then
-    CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias - 0.1;
-  if Event.IsKey(K_4) then
-    CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias + 0.1;
-  // Writeln(CurrentPartScene.Attributes.SilhouetteScale:1:10);
-  // Writeln(CurrentPartScene.Attributes.SilhouetteBias:1:10);
-  if Event.IsKey(K_5) then
+  if EnableDebugKeys(Container) then
   begin
-    SceneManager.Camera := SceneManager.CreateDefaultCamera;
-    (SceneManager.Camera as TUniversalCamera).NavigationType := ntExamine;
+    if Event.IsKey(K_1) then
+      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - 0.1;
+    if Event.IsKey(K_2) then
+      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale + 0.1;
+    if Event.IsKey(K_3) then
+      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias - 0.1;
+    if Event.IsKey(K_4) then
+      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias + 0.1;
+    // Writeln(CurrentPartScene.Attributes.SilhouetteScale:1:10);
+    // Writeln(CurrentPartScene.Attributes.SilhouetteBias:1:10);
+    if Event.IsKey(K_5) then
+    begin
+      SceneManager.Camera := SceneManager.CreateDefaultCamera;
+      (SceneManager.Camera as TUniversalCamera).NavigationType := ntExamine;
+    end;
+    if Event.IsKey(K_6) then
+    begin
+      if CurrentPart = High(CurrentPart) then
+        LoadPart(Low(TPart)) else
+        LoadPart(Succ(CurrentPart));
+    end;
+    if Event.IsKey(K_8) then
+      RenderDebug3D := not RenderDebug3D;
+
+    if TerrainTransform <> nil then
+    begin
+      if Event.IsKey(K_9) then
+      begin
+        TerrainTransform.FdScale.Value -= Vector3Single(0.5, 0.5, 0.5);
+        TerrainTransform.FdScale.Changed;
+        WritelnLog('Terrain', VectorToNiceStr(TerrainTransform.FdScale.Value));
+      end;
+      if Event.IsKey(K_0) then
+      begin
+        TerrainTransform.FdScale.Value += Vector3Single(0.5, 0.5, 0.5);
+        TerrainTransform.FdScale.Changed;
+        WritelnLog('Terrain', VectorToNiceStr(TerrainTransform.FdScale.Value));
+      end;
+      if Event.IsKey(K_P) then
+      begin
+        TerrainTransform.FdTranslation.Value[1] -= 0.5;
+        TerrainTransform.FdTranslation.Changed;
+        WritelnLog('Terrain', FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
+      end;
+      if Event.IsKey(K_O) then
+      begin
+        TerrainTransform.FdTranslation.Value[1] += 0.5;
+        TerrainTransform.FdTranslation.Changed;
+        WritelnLog('Terrain', FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
+      end;
+    end;
   end;
-  if Event.IsKey(K_6) then
-  begin
-    if CurrentPart = High(CurrentPart) then
-      LoadPart(Low(TPart)) else
-      LoadPart(Succ(CurrentPart));
-  end;
-  if Event.IsKey(K_8) then
-    RenderDebug3D := not RenderDebug3D;
-  if Event.IsKey(K_9) then
-  begin
-    TerrainTransform.FdScale.Value -= Vector3Single(0.5, 0.5, 0.5);
-    TerrainTransform.FdScale.Changed;
-    Writeln(VectorToNiceStr(TerrainTransform.FdScale.Value));
-  end;
-  if Event.IsKey(K_0) then
-  begin
-    TerrainTransform.FdScale.Value += Vector3Single(0.5, 0.5, 0.5);
-    TerrainTransform.FdScale.Changed;
-    Writeln(VectorToNiceStr(TerrainTransform.FdScale.Value));
-  end;
-  if Event.IsKey(K_P) then
-  begin
-    TerrainTransform.FdTranslation.Value[1] -= 0.5;
-    TerrainTransform.FdTranslation.Changed;
-    Writeln(FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
-  end;
-  if Event.IsKey(K_O) then
-  begin
-    TerrainTransform.FdTranslation.Value[1] += 0.5;
-    TerrainTransform.FdTranslation.Changed;
-    Writeln(FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
-  end;
+
   if Event.IsKey(K_F5) then
   begin
     Window.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
   end;
+end;
+
+function EnableDebugKeys(Container: TUIContainer): boolean;
+begin
+  { debug keys only with Ctrl }
+  Result := Container.Pressed[K_Ctrl];
 end;
 
 end.

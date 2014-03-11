@@ -18,11 +18,11 @@ unit GameTitle;
 
 interface
 
-uses CastleLevels, CastlePlayer, CastleKeysMouse;
+uses CastleLevels, CastlePlayer, CastleKeysMouse, CastleUIControls;
 
 procedure StartTitleScreen;
 
-procedure TitlePress(const Event: TInputPressRelease);
+procedure TitlePress(Container: TUIContainer; const Event: TInputPressRelease);
 
 implementation
 
@@ -36,7 +36,7 @@ begin
   Player.Blocked := true;
 end;
 
-procedure TitlePress(const Event: TInputPressRelease);
+procedure TitlePress(Container: TUIContainer; const Event: TInputPressRelease);
 begin
   if Event.IsMouseButton(mbLeft) or
      Event.IsKey(K_Enter) or
