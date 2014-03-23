@@ -44,8 +44,10 @@ begin
   SoundEngine.RepositoryURL := ApplicationData('sounds/index.xml');
   SoundEngine.MusicPlayer.MusicVolume := 0.5;
 
-  Resources.LoadFromFiles;
-  Levels.LoadFromFiles;
+  //Resources.LoadFromFiles; // cannot search recursively in Android assets
+  //Levels.LoadFromFiles; // cannot search recursively in Android assets
+  Levels.AddFromFile(ApplicationData('title/level.xml'));
+  Levels.AddFromFile(ApplicationData('level/level.xml'));
 end;
 
 function MyGetApplicationName: string;

@@ -490,6 +490,7 @@ end;
 
 procedure GameRender;
 
+  {$ifndef OpenGLES} // TODO-es
   procedure VisualizeRayDown(Point: TVector3Single);
   begin
     Point[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
@@ -504,6 +505,7 @@ procedure GameRender;
       Point,
       Point - Vector3Single(0, 2 * HeightOverEverything, 0)));}
   end;
+  {$endif}
 
 var
   Point, Side: TVector3Single;

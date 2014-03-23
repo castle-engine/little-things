@@ -19,9 +19,10 @@ clean:
 	rm -f \
 	       little_things      little_things.exe \
 	  code/little_things code/little_things.exe \
-	  code/liblittle_things.so
+	  code/liblittle_things_android.so
 	find data/ -iname '*~' -exec rm -f '{}' ';'
 	$(MAKE) -C ../castle_game_engine/ clean
+	$(MAKE) -C android/ clean
 
 FILES := --exclude *.xcf --exclude '*.blend*' README.txt data/
 WINDOWS_FILES := $(FILES) little_things.exe ../www/pack/win32_dlls/*.dll
