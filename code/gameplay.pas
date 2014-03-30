@@ -621,9 +621,9 @@ begin
   end;
 
   if Event.IsKey(K_F5) then
-  begin
     Window.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
-  end;
+  if Event.IsKey(K_Escape) then
+    Window.Close;
 end;
 
 function EnableDebugKeys(Container: TUIContainer): boolean;
