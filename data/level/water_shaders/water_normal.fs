@@ -1,6 +1,10 @@
 varying vec2 normalMapTexCooord;
 uniform sampler2D normalMap;
 
+#ifdef GL_ES
+uniform mat3 castle_NormalMatrix;
+#endif
+
 void PLUG_fragment_eye_space(const vec4 vertex, inout vec3 normal)
 {
   normal = texture2D(normalMap, normalMapTexCooord).xyz;
@@ -18,7 +22,13 @@ void PLUG_fragment_eye_space(const vec4 vertex, inout vec3 normal)
 
   if (!gl_FrontFacing) normal.z = -normal.z;
 
-  normal = gl_NormalMatrix * normal;
+  normal =
+#ifdef GL_ES
+    castle_NormalMatrix
+#else
+    gl_NormalMatrix
+#endif
+      * normal;
 }
 
 /* void PLUG _texture_apply(inout vec4 fragment_color, const in vec3 normal_eye) */
