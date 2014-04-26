@@ -46,7 +46,7 @@ implementation
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleWarnings, CastleSceneCore, CastleBoxes, CastleTimeUtils,
-  CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer,
+  CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise;
 
@@ -54,6 +54,7 @@ var
   DefaultMoveSpeed: Single;
   VisibilityLimit: Single;
   RenderDebug3D: boolean;
+  GpuATI: boolean;
 
   CurrentPart: TPart;
   CurrentPartScene: TCastleScene;
@@ -374,6 +375,9 @@ var
   Avatar: TCastlePrecalculatedAnimation;
 begin
   TitleScreen := false;
+  GpuATI := GLVersion.VendorATI or (Pos('AMD', GLVersion.Renderer) <> -1);
+  if GpuATI then
+    WritelnLog('GPU', 'Silhouette glPolygonOffset will be adjusted faster for ATI GPU');
 
   SeedDirection := Random(High(LongInt));
   SeedSpeed := Random(High(LongInt));
@@ -576,19 +580,42 @@ begin
 end;
 
 procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
+
+  procedure ReportPolygonOffset;
+  begin
+    WritelnLog('GPU', 'SilhouetteScale: %f, SilhouetteBias: %f',
+      [ CurrentPartScene.Attributes.SilhouetteScale,
+        CurrentPartScene.Attributes.SilhouetteBias]);
+  end;
+
+var
+  PolygonOffsetFactor: Single;
 begin
   if EnableDebugKeys(Container) then
   begin
+    if GpuATI then
+      PolygonOffsetFactor := 1.0 else
+      PolygonOffsetFactor := 0.1;
     if Event.IsKey(K_1) then
-      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - 0.1;
+    begin
+      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - PolygonOffsetFactor;
+      ReportPolygonOffset;
+    end;
     if Event.IsKey(K_2) then
-      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale + 0.1;
+    begin
+      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale + PolygonOffsetFactor;
+      ReportPolygonOffset;
+    end;
     if Event.IsKey(K_3) then
-      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias - 0.1;
+    begin
+      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias - PolygonOffsetFactor;
+      ReportPolygonOffset;
+    end;
     if Event.IsKey(K_4) then
-      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias + 0.1;
-    // Writeln(CurrentPartScene.Attributes.SilhouetteScale:1:10);
-    // Writeln(CurrentPartScene.Attributes.SilhouetteBias:1:10);
+    begin
+      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias + PolygonOffsetFactor;
+      ReportPolygonOffset;
+    end;
     if Event.IsKey(K_5) then
     begin
       SceneManager.Camera := SceneManager.CreateDefaultCamera;
