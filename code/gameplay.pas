@@ -381,11 +381,11 @@ begin
   Player.Camera.MouseLook := true;
   Player.Blocked := false;
 
-  PlayerInput_LeftStrafe.MakeClear;
-  PlayerInput_RightStrafe.MakeClear;
-  PlayerInput_GravityUp.MakeClear;
-  PlayerInput_Jump.MakeClear;
-  PlayerInput_Crouch.MakeClear;
+  PlayerInput_LeftStrafe.MakeClear(true);
+  PlayerInput_RightStrafe.MakeClear(true);
+  PlayerInput_GravityUp.MakeClear(true);
+  PlayerInput_Jump.MakeClear(true);
+  PlayerInput_Crouch.MakeClear(true);
 
   SceneManager.LoadLevel('water');
   SceneManager.OnMoveAllowed := @TGame(nil).MoveAllowed;

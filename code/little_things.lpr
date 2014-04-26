@@ -17,7 +17,8 @@
 
 { "Little Things" standalone game binary. }
 program little_things;
-uses CastleWindow, CastleConfig, Game, CastleParameters, CastleLog, CastleUtils;
+uses CastleWindow, CastleConfig, Game, CastleParameters, CastleLog, CastleUtils,
+  CastleSoundEngine;
 
 const
   Options: array [0..0] of TOption =
@@ -35,11 +36,13 @@ begin
 end;
 
 begin
+  Config.Load; // before SoundEngine.ParseParameters
+
   Window.FullScreen := true;
   Window.ParseParameters;
+  SoundEngine.ParseParameters;
   Parameters.Parse(Options, @OptionProc, nil);
 
-  Config.Load;
   Application.Initialize;
   Window.OpenAndRun;
   Config.Save;
