@@ -19,7 +19,8 @@ clean:
 	rm -f \
 	       little_things      little_things.exe \
 	  code/little_things code/little_things.exe \
-	  code/liblittle_things_android.so
+	  code/liblittle_things_android.so \
+	  code/little_things.compiled
 	find data/ -iname '*~' -exec rm -f '{}' ';'
 	$(MAKE) -C ../castle_game_engine/ clean
 	$(MAKE) -C android/ clean
