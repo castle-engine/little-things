@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="little_things"
+  standalone_source="code/little_things.lpr"
+  android_source="code/little_things_android.lpr">
+  <package>
+    <include path="README.txt" />
+    <include path="COPYING.GPL2.txt" />
+  </package>
+</project>

@@ -16,25 +16,13 @@ standalone:
 
 .PHONY: clean
 clean:
-	rm -f \
-	       little_things      little_things.exe \
-	  code/little_things code/little_things.exe \
-	  code/liblittle_things_android.so \
-	  code/little_things.compiled
-	find data/ -iname '*~' -exec rm -f '{}' ';'
-	$(MAKE) -C ../castle_game_engine/ clean
+	castle-engine clean
 	$(MAKE) -C android/ clean
-
-FILES := --exclude *.xcf --exclude '*.blend*' README.txt data/
-WINDOWS_FILES := $(FILES) little_things.exe ../www/pack/win32_dlls/*.dll
-UNIX_FILES    := $(FILES) little_things
 
 .PHONY: release-win32
 release-win32: clean standalone
-	rm -Rf little_things-win32.zip
-	zip -r little_things-win32.zip $(WINDOWS_FILES)
+	castle-engine package --os=win32 --cpu=i386
 
 .PHONY: release-linux
 release-linux: clean standalone
-	rm -Rf little_things-linux-i386.tar.gz
-	tar czvf little_things-linux-i386.tar.gz $(UNIX_FILES)
+	castle-engine package --os=linux --cpu=i386
