@@ -8,7 +8,6 @@ standalone:
 .PHONY: clean
 clean:
 	castle-engine clean
-	$(MAKE) -C android/ clean
 
 .PHONY: release-win32
 release-win32:
