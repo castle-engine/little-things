@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="little_things"
+  caption="Little Things"
+  qualified_name="net.sourceforge.castleengine.littlethings"
   standalone_source="code/little_things.lpr"
   android_source="code/little_things_android.lpr">
+  <version value="1.1.4" code="9" />
+  <icons>
+    <icon path="store-graphics/icon.ico" />
+  </icons>
   <package>
     <include path="README.txt" />
     <include path="COPYING.GPL2.txt" />
