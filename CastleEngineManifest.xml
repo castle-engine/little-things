@@ -6,7 +6,7 @@
   android_source="code/little_things_android.lpr">
   <version value="1.1.4" code="9" />
   <icons>
-    <icon path="store-graphics/icon.ico" />
+    <icon path="icons/icon2.png" />
   </icons>
   <package>
     <include path="README.txt" />
