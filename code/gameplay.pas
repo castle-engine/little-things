@@ -52,7 +52,8 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   Math, CastleWarnings, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
-  CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise;
+  CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise,
+  CastleWindowTouch;
 
 var
   DefaultMoveSpeed: Single;
@@ -435,7 +436,9 @@ begin
   AvatarTransform.Add(Avatar);
 
   {$ifdef TOUCH_INTERFACE}
-  Window.AutomaticTouchInterface := true;
+  // Do not use AutomaticTouchInterface, as we pretend we're flying for a hacky
+  // 3rd-person camera, and it would cause using TouchInterface for flying.
+  Window.TouchInterface := tiCtlWalkDragRotate;
   Player.EnableCameraDragging := true;
   {$else}
   Player.Camera.MouseLook := true;
