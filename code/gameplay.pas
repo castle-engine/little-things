@@ -386,14 +386,6 @@ begin
   SeedDirection := Random(High(LongInt));
   SeedSpeed := Random(High(LongInt));
 
-  // TODO: why this fails?
-  // {$ifdef TOUCH_INTERFACE}
-  // Window.AutomaticTouchInterface := true;
-  // Player.EnableCameraDragging := true;
-  // {$else}
-  Player.Camera.MouseLook := true;
-  // {$endif}
-
   Player.Blocked := false;
 
   PlayerInput_LeftStrafe.MakeClear(true);
@@ -441,6 +433,13 @@ begin
   Avatar.TimeLoop := true;
   Avatar.TimePlayingSpeed := 10;
   AvatarTransform.Add(Avatar);
+
+  {$ifdef TOUCH_INTERFACE}
+  Window.AutomaticTouchInterface := true;
+  Player.EnableCameraDragging := true;
+  {$else}
+  Player.Camera.MouseLook := true;
+  {$endif}
 
   DefaultMoveSpeed := Player.Camera.MoveSpeed;
 
