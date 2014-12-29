@@ -18,6 +18,10 @@ unit GamePlay;
 
 {$I castleconf.inc}
 
+{ $define TOUCH_INTERFACE} // useful to test TOUCH_INTERFACE on desktops
+{$ifdef ANDROID} {$define TOUCH_INTERFACE} {$endif}
+{$ifdef iOS}     {$define TOUCH_INTERFACE} {$endif}
+
 interface
 
 uses CastleScene, Castle3D, X3DNodes, CastlePlayer, CastleLevels,
@@ -382,7 +386,14 @@ begin
   SeedDirection := Random(High(LongInt));
   SeedSpeed := Random(High(LongInt));
 
+  // TODO: why this fails?
+  // {$ifdef TOUCH_INTERFACE}
+  // Window.AutomaticTouchInterface := true;
+  // Player.EnableCameraDragging := true;
+  // {$else}
   Player.Camera.MouseLook := true;
+  // {$endif}
+
   Player.Blocked := false;
 
   PlayerInput_LeftStrafe.MakeClear(true);

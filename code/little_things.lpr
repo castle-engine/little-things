@@ -48,7 +48,6 @@ begin
   SoundEngine.ParseParameters;
   Parameters.Parse(Options, @OptionProc, nil);
 
-  Application.Initialize;
   Window.OpenAndRun;
   Config.Save;
 end.

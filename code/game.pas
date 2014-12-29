@@ -48,19 +48,16 @@ begin
   //Levels.LoadFromFiles; // cannot search recursively in Android assets
   Levels.AddFromFile(ApplicationData('title/level.xml'));
   Levels.AddFromFile(ApplicationData('level/level.xml'));
+
+  StartPlayer;
+  if UseDebugPart then
+    StartGame else
+    StartTitleScreen;
 end;
 
 function MyGetApplicationName: string;
 begin
   Result := 'little_things';
-end;
-
-procedure WindowOpen(Container: TUIContainer);
-begin
-  StartPlayer;
-  if UseDebugPart then
-    StartGame else
-    StartTitleScreen;
 end;
 
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
@@ -103,7 +100,6 @@ initialization
 
   { create Window and initialize Window callbacks }
   Window := TCastleWindowTouch.Create(Application);
-  Window.OnOpen := @WindowOpen;
   Window.OnPress := @WindowPress;
   Window.OnUpdate := @WindowUpdate;
   Window.OnRender := @WindowRender;
