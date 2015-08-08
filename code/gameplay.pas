@@ -505,7 +505,7 @@ begin
   { make sure CurrentPartScene knows about current camera.
     By default, only MainScene knows about it, and we want to pass it to CurrentPartScene
     to use CurrentPartScene.DistanceCulling. }
-  CurrentPartScene.CameraChanged(SceneManager.Camera, []);
+  CurrentPartScene.CameraChanged(SceneManager.Camera);
 
   if (DogTransform <> nil) and
      (PointsDistanceSqr(DogTransform.FdTranslation.Value, Player.Camera.Position) <
