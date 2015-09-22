@@ -45,7 +45,7 @@ begin
 
   Window.FullScreen := true;
   Window.ParseParameters;
-  SoundEngine.ParseParameters;
+  SoundEngine.ParseParameters; // do this after Config.Load, so command-line overrides config value
   Parameters.Parse(Options, @OptionProc, nil);
 
   Window.OpenAndRun;
