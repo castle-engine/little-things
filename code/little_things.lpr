@@ -41,13 +41,14 @@ begin
 end;
 
 begin
-  Config.Load; // before SoundEngine.ParseParameters
+  UserConfig.Load;
+  SoundEngine.LoadFromConfig(UserConfig); // before SoundEngine.ParseParameters
 
   Window.FullScreen := true;
   Window.ParseParameters;
-  SoundEngine.ParseParameters; // do this after Config.Load, so command-line overrides config value
+  SoundEngine.ParseParameters;
   Parameters.Parse(Options, @OptionProc, nil);
 
   Window.OpenAndRun;
-  Config.Save;
+  UserConfig.Save;
 end.
