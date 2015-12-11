@@ -10,7 +10,7 @@ Using Castle Game Engine, see http://castle-engine.sourceforge.net/ .
   http://castle-engine.sourceforge.net/engine.php
 
 - Install the build tool of Castle Game Engine, see
-  https://sourceforge.net/p/castle-engine/wiki/Build%20tool/ .
+  https://github.com/castle-engine/castle-engine/wiki/Build-Tool .
 
   Basically, you compile a "castle-engine" program, and place it on $PATH.
   And you set the environment variable $CASTLE_ENGINE_PATH to the directory
