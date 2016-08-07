@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<animation>
+<!-- time_backwards must be readded manually
+     each time after exporting from Blender -->
+<animation backwards="True">
   <frame url="avatar_0067.x3d.gz" time="0.000000" />
   <frame url="avatar_0076.x3d.gz" time="0.360000" />
   <frame url="avatar_0085.x3d.gz" time="0.720000" />

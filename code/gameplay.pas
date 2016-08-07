@@ -377,7 +377,7 @@ end;
 
 procedure StartGame;
 var
-  Avatar: TCastlePrecalculatedAnimation;
+  Avatar: TCastleScene;
 begin
   TitleScreen := false;
   GpuATI := (GLVersion.VendorType = gvATI) or (Pos('AMD', GLVersion.Renderer) <> -1);
@@ -426,12 +426,10 @@ begin
   AvatarTransform.Scale := Vector3Single(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
   SceneManager.Items.Add(AvatarTransform);
 
-  Avatar := TCastlePrecalculatedAnimation.Create(SceneManager);
-  Avatar.LoadFromFile(ApplicationData('avatar/avatar.kanim'), false, false);
-  { it's easier to set TimeXxx in code,
-    instead of manually editing kanim each time after exporting from Blender }
-  Avatar.TimeBackwards := true;
-  Avatar.TimeLoop := true;
+  Avatar := TCastleScene.Create(SceneManager);
+  Avatar.Load(ApplicationData('avatar/avatar.kanim'));
+  Avatar.ProcessEvents := true;
+  Avatar.PlayAnimation('animation', paForceLooping);
   Avatar.TimePlayingSpeed := 10;
   AvatarTransform.Add(Avatar);
 
