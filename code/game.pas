@@ -27,7 +27,7 @@ implementation
 
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleScene, X3DNodes,
-  CastleCameras, CastleFilesUtils, Math, CastleKeysMouse, CastleWarnings,
+  CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
   CastleRenderer, Castle3D, CastlePrecalculatedAnimation, CastleLevels, CastlePlayer,
   CastleUIControls, CastleSoundEngine,
@@ -36,8 +36,6 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
 { One-time initialization. }
 procedure ApplicationInitialize;
 begin
-  OnWarning := @OnWarningWrite;
-
   Progress.UserInterface := WindowProgressInterface;
   SceneManager := Window.SceneManager;
 
@@ -68,7 +66,6 @@ begin
   begin
     if Event.IsKey(K_7) then
     begin
-      InitializeLog;
       Player.Camera.GetView(Pos, Dir, Up, GravityUp);
       WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
     end;
@@ -94,6 +91,8 @@ end;
 initialization
   { This should be done as early as possible to mark our log lines correctly. }
   OnGetApplicationName := @MyGetApplicationName;
+
+  InitializeLog;
 
   { initialize Application callbacks }
   Application.OnInitialize := @ApplicationInitialize;

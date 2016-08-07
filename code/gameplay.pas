@@ -49,7 +49,7 @@ implementation
 
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
-  Math, CastleWarnings, CastleSceneCore, CastleBoxes, CastleTimeUtils,
+  Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise,
@@ -362,7 +362,7 @@ begin
   DogTransform := CurrentPartScene.RootNode.TryFindNodeByName(
     TTransformNode, 'DogTransform', false) as TTransformNode;
   if DogTransform = nil then
-    OnWarning(wtMajor, 'DogTransform', 'DogTransform not found on part ' + PartName);
+    WritelnWarning('DogTransform', 'DogTransform not found on part ' + PartName);
 
 {
   if Part = pCave then
@@ -380,7 +380,7 @@ var
   Avatar: TCastlePrecalculatedAnimation;
 begin
   TitleScreen := false;
-  GpuATI := GLVersion.VendorATI or (Pos('AMD', GLVersion.Renderer) <> -1);
+  GpuATI := (GLVersion.VendorType = gvATI) or (Pos('AMD', GLVersion.Renderer) <> -1);
   if GpuATI then
     WritelnLog('GPU', 'Silhouette glPolygonOffset will be adjusted faster for ATI GPU');
 
