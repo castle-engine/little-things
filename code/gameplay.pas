@@ -340,7 +340,7 @@ begin
   if NewBackground <> nil then
   begin
     NewBackground.EventSet_bind.Send(true);
-    WritelnLog('little_things', 'Found and bound background ' + NewBackground.NodeName);
+    WritelnLog('little_things', 'Found and bound background ' + NewBackground.X3DName);
   end;
 
   ConfigureScene(CurrentPartScene);
