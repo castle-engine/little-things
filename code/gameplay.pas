@@ -35,9 +35,7 @@ const
 procedure LoadPart(const Part: TPart);
 
 procedure StartGame;
-procedure GameUpdate(const SecondsPassed: Single);
 procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
-procedure GameRender;
 
 var
   UseDebugPart: boolean = false;
@@ -53,7 +51,19 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise,
-  CastleWindowTouch;
+  CastleWindowTouch, CastleControls, CastleFrustum;
+
+type
+  { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
+  TGameUI = class(TUIControl)
+    procedure Update(const SecondsPassed: Single;
+      var HandleInput: boolean); override;
+  end;
+
+  TGameDebug3D = class(T3D)
+    function BoundingBox: TBox3D; override;
+    procedure Render(const Frustum: TFrustum; const Params: TRenderParams); override;
+  end;
 
 var
   DefaultMoveSpeed: Single;
@@ -72,6 +82,8 @@ var
   WindTime: TFloatTime;
   SeedDirection: Cardinal;
   SeedSpeed: Cardinal;
+
+  GameDebug3D: TGameDebug3D;
 
 const
   HeightOverAvatar = 2.0; //< do not make it ultra-large, to allow swimming under passages
@@ -333,7 +345,7 @@ begin
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   CurrentPartScene.Collides := false;
 
-  PaintedEffect.Enabled := PartConfig[Part].PaintedEffect and not RenderDebug3D;
+  PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
 
   NewBackground := SceneManager.MainScene.RootNode.TryFindNodeByName(
     TAbstractBackgroundNode, 'Background' + PartName, false) as TAbstractBackgroundNode;
@@ -378,6 +390,7 @@ end;
 procedure StartGame;
 var
   Avatar: TCastleScene;
+  GameUI: TGameUI;
 begin
   TitleScreen := false;
   GpuATI := (GLVersion.VendorType = gvATI) or (Pos('AMD', GLVersion.Renderer) <> -1);
@@ -447,147 +460,13 @@ begin
   if UseDebugPart then
     LoadPart(DebugPart) else
     LoadPart(Low(TPart));
-end;
 
-procedure GameUpdate(const SecondsPassed: Single);
+  GameUI := TGameUI.Create(Application);
+  Window.Controls.InsertFront(GameUI);
 
-  procedure Wind;
-  var
-    WindMove, OldPosition, NewPosition: TVector3Single;
-    WindDirectionAngle: Single;
-    WindDirection: TVector3Single;
-    WindSpeed: Single;
-    S, C: Extended;
-  begin
-    WindTime += SecondsPassed;
-    WindDirectionAngle := BlurredInterpolatedNoise2D_Spline(WindTime * 2, 0, SeedDirection) * 2 * Pi;
-    SinCos(WindDirectionAngle, S, C);
-    WindDirection := Vector3Single(S, 0, C);
-    WindSpeed := 0.1 + BlurredInterpolatedNoise2D_Spline(WindTime / 2, 0, SeedSpeed) * 1.0;
-
-    WindMove := WindDirection * WindSpeed * SecondsPassed;
-    OldPosition := Player.Camera.Position;
-    NewPosition := OldPosition + WindMove;
-
-    if OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater) and
-       OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater) then
-      Player.Camera.Position := NewPosition;
-  end;
-
-const
-  MoveSpeedChangeSpeed = 5;
-  DistanceToDogToFinish = 10.0;
-var
-  MoveSpeedTarget: Single;
-begin
-  WaterTransform.FdTranslation.Send(Vector3Single(
-    Player.Position[0], WaterTransform.FdTranslation.Value[1],
-    Player.Position[2]));
-
-  { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
-  AvatarTransform.Rotation :=
-    CamDirUp2Orient(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
-
-  MoveSpeedTarget := DefaultMoveSpeed * OverWaterFactor(AvatarTransform.Translation);
-  if MoveSpeedTarget > Player.Camera.MoveSpeed then
-    Player.Camera.MoveSpeed := Min(Player.Camera.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
-  if MoveSpeedTarget < Player.Camera.MoveSpeed then
-    Player.Camera.MoveSpeed := Max(Player.Camera.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
-
-  //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', VectorToNiceStr(AvatarTransform.Translation));
-
-  Wind;
-
-  AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
-
-  { make sure CurrentPartScene knows about current camera.
-    By default, only MainScene knows about it, and we want to pass it to CurrentPartScene
-    to use CurrentPartScene.DistanceCulling. }
-  CurrentPartScene.CameraChanged(SceneManager.Camera);
-
-  if (DogTransform <> nil) and
-     (PointsDistanceSqr(DogTransform.FdTranslation.Value, Player.Camera.Position) <
-      Sqr(DistanceToDogToFinish)) then
-  begin
-    if CurrentPart = High(CurrentPart) then
-      LoadPart(Low(TPart)) else
-      LoadPart(Succ(CurrentPart));
-  end;
-end;
-
-procedure GameRender;
-
-  {$ifndef OpenGLES} // TODO-es
-  procedure VisualizeRayDown(Point: TVector3Single);
-  begin
-    Point[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
-//    Writeln(VectorToNiceStr(Point));
-    glVertexv(Point);
-
-    Point[SceneManager.Items.GravityCoordinate] := +HeightOverAvatar;
-//    Writeln(VectorToNiceStr(Point));
-    glVertexv(Point);
-
-    {glDrawBox3DWire(Box3D(
-      Point,
-      Point - Vector3Single(0, 2 * HeightOverEverything, 0)));}
-  end;
-  {$endif}
-
-var
-  Point, Side: TVector3Single;
-  Margin: Single;
-begin
-  {$ifndef OpenGLES} // TODO-es
-  if RenderDebug3D then
-  begin
-    { TODO: why is this not visible with screen effect visible? }
-    PaintedEffect.Enabled := false;
-
-    glLoadMatrix(RenderingCamera.Matrix);
-    glPushAttrib(GL_ENABLE_BIT or GL_LIGHTING_BIT);
-      GLEnableTexture(etNone);
-      glDisable(GL_LIGHTING);
-      glDisable(GL_CULL_FACE); { saved by GL_ENABLE_BIT }
-      glDisable(GL_COLOR_MATERIAL); { saved by GL_ENABLE_BIT }
-      glDisable(GL_ALPHA_TEST); { saved by GL_ENABLE_BIT }
-      glDisable(GL_FOG); { saved by GL_ENABLE_BIT }
-      glEnable(GL_DEPTH_TEST);
-      CurrentProgram := nil;
-
-      glColorv(Black);
-
-      glBegin(GL_LINES);
-        VisualizeRayDown(Player.Camera.Position);
-
-        Point := AvatarPositionFromCamera(Player.Camera.Position);
-        Side := VectorProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
-
-        VisualizeRayDown(Point);
-
-        Margin := MarginOverWater;
-
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
-
-        VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2);
-        VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin);
-        VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin);
-
-        Margin := MarginOverWater / 2;
-
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
-        VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
-      glEnd();
-    glPopAttrib();
-  end;
-  {$endif}
+  GameDebug3D := TGameDebug3D.Create(Application);
+  GameDebug3D.Exists := RenderDebug3D;
+  SceneManager.Items.Add(GameDebug3D);
 end;
 
 procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
@@ -639,7 +518,10 @@ begin
         LoadPart(Succ(CurrentPart));
     end;
     if Event.IsKey(K_8) then
+    begin
       RenderDebug3D := not RenderDebug3D;
+      GameDebug3D.Exists := RenderDebug3D;
+    end;
 
     if TerrainTransform <> nil then
     begin
@@ -680,6 +562,163 @@ function EnableDebugKeys(Container: TUIContainer): boolean;
 begin
   { debug keys only with Ctrl }
   Result := Container.Pressed[K_Ctrl];
+end;
+
+{ TGameUI -------------------------------------------------------------------- }
+
+procedure TGameUI.Update(const SecondsPassed: Single;
+  var HandleInput: boolean);
+
+  procedure Wind;
+  var
+    WindMove, OldPosition, NewPosition: TVector3Single;
+    WindDirectionAngle: Single;
+    WindDirection: TVector3Single;
+    WindSpeed: Single;
+    S, C: Extended;
+  begin
+    WindTime += SecondsPassed;
+    WindDirectionAngle := BlurredInterpolatedNoise2D_Spline(WindTime * 2, 0, SeedDirection) * 2 * Pi;
+    SinCos(WindDirectionAngle, S, C);
+    WindDirection := Vector3Single(S, 0, C);
+    WindSpeed := 0.1 + BlurredInterpolatedNoise2D_Spline(WindTime / 2, 0, SeedSpeed) * 1.0;
+
+    WindMove := WindDirection * WindSpeed * SecondsPassed;
+    OldPosition := Player.Camera.Position;
+    NewPosition := OldPosition + WindMove;
+
+    if OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater) and
+       OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater) then
+      Player.Camera.Position := NewPosition;
+  end;
+
+const
+  MoveSpeedChangeSpeed = 5;
+  DistanceToDogToFinish = 10.0;
+var
+  MoveSpeedTarget: Single;
+begin
+  inherited;
+
+  WaterTransform.FdTranslation.Send(Vector3Single(
+    Player.Position[0], WaterTransform.FdTranslation.Value[1],
+    Player.Position[2]));
+
+  { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
+  AvatarTransform.Rotation :=
+    CamDirUp2Orient(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+
+  MoveSpeedTarget := DefaultMoveSpeed * OverWaterFactor(AvatarTransform.Translation);
+  if MoveSpeedTarget > Player.Camera.MoveSpeed then
+    Player.Camera.MoveSpeed := Min(Player.Camera.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
+  if MoveSpeedTarget < Player.Camera.MoveSpeed then
+    Player.Camera.MoveSpeed := Max(Player.Camera.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
+
+  //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', VectorToNiceStr(AvatarTransform.Translation));
+
+  Wind;
+
+  AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
+
+  { make sure CurrentPartScene knows about current camera.
+    By default, only MainScene knows about it, and we want to pass it to CurrentPartScene
+    to use CurrentPartScene.DistanceCulling. }
+  CurrentPartScene.CameraChanged(SceneManager.Camera);
+
+  if (DogTransform <> nil) and
+     (PointsDistanceSqr(DogTransform.FdTranslation.Value, Player.Camera.Position) <
+      Sqr(DistanceToDogToFinish)) then
+  begin
+    if CurrentPart = High(CurrentPart) then
+      LoadPart(Low(TPart)) else
+      LoadPart(Succ(CurrentPart));
+  end;
+end;
+
+{ TGameDebug3D --------------------------------------------------------------- }
+
+function TGameDebug3D.BoundingBox: TBox3D;
+begin
+  Result := SceneManager.MainScene.BoundingBox;
+end;
+
+procedure TGameDebug3D.Render(const Frustum: TFrustum; const Params: TRenderParams);
+
+  {$ifndef OpenGLES} // TODO-es
+  procedure VisualizeRayDown(Point: TVector3Single);
+  begin
+    Point[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
+//    Writeln(VectorToNiceStr(Point));
+    glVertexv(Point);
+
+    Point[SceneManager.Items.GravityCoordinate] := +HeightOverAvatar;
+//    Writeln(VectorToNiceStr(Point));
+    glVertexv(Point);
+
+    {glDrawBox3DWire(Box3D(
+      Point,
+      Point - Vector3Single(0, 2 * HeightOverEverything, 0)));}
+  end;
+  {$endif}
+
+var
+  Point, Side: TVector3Single;
+  Margin: Single;
+begin
+  inherited;
+
+  if GetExists and
+    (not Params.Transparent) and
+    (not Params.ShadowVolumesReceivers) then
+  begin
+    {$ifndef OpenGLES} // TODO-es
+    glPushMatrix;
+      glMultMatrix(Params.RenderTransform);
+
+      glPushAttrib(GL_ENABLE_BIT or GL_LIGHTING_BIT);
+        GLEnableTexture(etNone);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE); { saved by GL_ENABLE_BIT }
+        glDisable(GL_COLOR_MATERIAL); { saved by GL_ENABLE_BIT }
+        glDisable(GL_ALPHA_TEST); { saved by GL_ENABLE_BIT }
+        glDisable(GL_FOG); { saved by GL_ENABLE_BIT }
+        glEnable(GL_DEPTH_TEST);
+        CurrentProgram := nil;
+
+        glColorv(Black);
+
+        glBegin(GL_LINES);
+          VisualizeRayDown(Player.Camera.Position);
+
+          Point := AvatarPositionFromCamera(Player.Camera.Position);
+          Side := VectorProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+
+          VisualizeRayDown(Point);
+
+          Margin := MarginOverWater;
+
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
+
+          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2);
+          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin);
+          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin);
+
+          Margin := MarginOverWater / 2;
+
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
+        glEnd();
+      glPopAttrib();
+    glPopMatrix();
+    {$endif}
+  end;
 end;
 
 end.

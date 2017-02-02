@@ -76,18 +76,6 @@ begin
     GamePress(Container, Event);
 end;
 
-procedure WindowUpdate(Container: TUIContainer);
-begin
-  if not TitleScreen then
-    GameUpdate(Window.Fps.UpdateSecondsPassed);
-end;
-
-procedure WindowRender(Container: TUIContainer);
-begin
-  if not TitleScreen then
-    GameRender;
-end;
-
 initialization
   { This should be done as early as possible to mark our log lines correctly. }
   OnGetApplicationName := @MyGetApplicationName;
@@ -100,9 +88,6 @@ initialization
   { create Window and initialize Window callbacks }
   Window := TCastleWindowTouch.Create(Application);
   Window.OnPress := @WindowPress;
-  Window.OnUpdate := @WindowUpdate;
-  Window.OnRender := @WindowRender;
-  Window.RenderStyle := rs3D;
   Window.FpsShowOnCaption := true;
   Application.MainWindow := Window;
 end.
