@@ -58,6 +58,7 @@ type
   TGameUI = class(TUIControl)
     procedure Update(const SecondsPassed: Single;
       var HandleInput: boolean); override;
+    procedure BeforeRender; override;
   end;
 
   TGameDebug3D = class(T3D)
@@ -601,14 +602,6 @@ var
 begin
   inherited;
 
-  WaterTransform.FdTranslation.Send(Vector3Single(
-    Player.Position[0], WaterTransform.FdTranslation.Value[1],
-    Player.Position[2]));
-
-  { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
-  AvatarTransform.Rotation :=
-    CamDirUp2Orient(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
-
   MoveSpeedTarget := DefaultMoveSpeed * OverWaterFactor(AvatarTransform.Translation);
   if MoveSpeedTarget > Player.Camera.MoveSpeed then
     Player.Camera.MoveSpeed := Min(Player.Camera.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
@@ -618,8 +611,6 @@ begin
   //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', VectorToNiceStr(AvatarTransform.Translation));
 
   Wind;
-
-  AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
 
   { make sure CurrentPartScene knows about current camera.
     By default, only MainScene knows about it, and we want to pass it to CurrentPartScene
@@ -634,6 +625,25 @@ begin
       LoadPart(Low(TPart)) else
       LoadPart(Succ(CurrentPart));
   end;
+end;
+
+procedure TGameUI.BeforeRender;
+begin
+  inherited;
+
+  { These need to be done in BeforeRender, not in Update,
+    otherwise there will be a visible delay between camera move/rotations
+    and the avatar move/rotations. }
+
+  WaterTransform.Translation := Vector3Single(
+    Player.Position[0], WaterTransform.FdTranslation.Value[1],
+    Player.Position[2]);
+
+  { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
+  AvatarTransform.Rotation :=
+    CamDirUp2Orient(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+
+  AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
 end;
 
 { TGameDebug3D --------------------------------------------------------------- }
