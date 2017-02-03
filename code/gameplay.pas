@@ -213,7 +213,7 @@ begin
   if Terrain is TTerrainNoise then
     Height /= TTerrainNoise(Terrain).Amplitude;
   { some hacks to hit interesting colors }
-  Height := Height  * 2000 - 1000;
+  Height := Height * 2000 - 1000;
 
   if Height < 0 then
     Result := Vector3Single(0.5, 0.5, 1) { light blue } else
