@@ -466,6 +466,7 @@ begin
 
   GameDebug3D := TGameDebug3D.Create(Application);
   GameDebug3D.Exists := RenderDebug3D;
+  GameDebug3D.Collides := false;
   SceneManager.Items.Add(GameDebug3D);
 end;
 
