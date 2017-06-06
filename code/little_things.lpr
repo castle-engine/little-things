@@ -18,9 +18,7 @@
 { "Little Things" standalone game binary. }
 program little_things;
 
-{$ifdef MSWINDOWS}
-  {$R ../automatic-windows-resources.res}
-{$endif MSWINDOWS}
+{$ifdef MSWINDOWS} {$R automatic-windows-resources.res} {$endif MSWINDOWS}
 
 uses CastleWindow, CastleConfig, Game, CastleParameters, CastleLog, CastleUtils,
   CastleSoundEngine;
