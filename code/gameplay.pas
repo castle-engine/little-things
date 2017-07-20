@@ -102,14 +102,14 @@ const
 
 { routines ------------------------------------------------------------------- }
 
-function AvatarPositionFromCamera(const CameraPosition: TVector3Single): TVector3Single;
+function AvatarPositionFromCamera(const CameraPosition: TVector3): TVector3;
 begin
   Result := CameraPosition +
     Player.Camera.DirectionInGravityPlane * Player.Camera.RotationHorizontalPivot;
   Result[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
-function OverWater(Point: TVector3Single; out Height: Single): boolean;
+function OverWater(Point: TVector3; out Height: Single): boolean;
 var
   Collision: TRayCollision;
 begin
@@ -129,19 +129,19 @@ begin
   end;
 end;
 
-function OverWater(Point: TVector3Single): boolean;
+function OverWater(Point: TVector3): boolean;
 var
   Height: Single;
 begin
   Result := OverWater(Point, Height { ignore });
 end;
 
-function OverWaterAround(const Point: TVector3Single; const Margin: Single;
+function OverWaterAround(const Point: TVector3; const Margin: Single;
   out Height: Single): boolean;
 var
-  Side: TVector3Single;
+  Side: TVector3;
 begin
-  Side := VectorProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+  Side := TVector3.CrossProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
   Result :=
     { to protect forward movement }
     OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin                    , Height) and
@@ -154,25 +154,25 @@ begin
     OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2                , Height) and
     OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
     OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
-    // OverWater(Point + Vector3Single(-Margin, 0, -Margin)) and
-    // OverWater(Point + Vector3Single(-Margin, 0,  Margin)) and
-    // OverWater(Point + Vector3Single( Margin, 0, -Margin)) and
-    // OverWater(Point + Vector3Single( Margin, 0,  Margin)) and
+    // OverWater(Point + Vector3(-Margin, 0, -Margin)) and
+    // OverWater(Point + Vector3(-Margin, 0,  Margin)) and
+    // OverWater(Point + Vector3( Margin, 0, -Margin)) and
+    // OverWater(Point + Vector3( Margin, 0,  Margin)) and
 
-    // OverWater(Point + Vector3Single(-Margin, 0,       0)) and
-    // OverWater(Point + Vector3Single( Margin, 0,       0)) and
-    // OverWater(Point + Vector3Single(      0, 0, -Margin)) and
-    // OverWater(Point + Vector3Single(      0, 0,  Margin));
+    // OverWater(Point + Vector3(-Margin, 0,       0)) and
+    // OverWater(Point + Vector3( Margin, 0,       0)) and
+    // OverWater(Point + Vector3(      0, 0, -Margin)) and
+    // OverWater(Point + Vector3(      0, 0,  Margin));
 end;
 
-function OverWaterAround(const Point: TVector3Single; const Margin: Single): boolean;
+function OverWaterAround(const Point: TVector3; const Margin: Single): boolean;
 var
   Height: Single;
 begin
   Result := OverWaterAround(Point, Margin, Height { ignore });
 end;
 
-function OverWaterFactor(const Point: TVector3Single): Single;
+function OverWaterFactor(const Point: TVector3): Single;
 begin
   if not OverWater(Point) then
     Result := 0 else
@@ -186,12 +186,12 @@ end;
 type
   TGame = class
     class procedure MoveAllowed(Sender: TCastleSceneManager;
-      var Allowed: boolean; const OldPosition, NewPosition: TVector3Single;
+      var Allowed: boolean; const OldPosition, NewPosition: TVector3;
       const BecauseOfGravity: boolean);
   end;
 
 class procedure TGame.MoveAllowed(Sender: TCastleSceneManager;
-  var Allowed: boolean; const OldPosition, NewPosition: TVector3Single;
+  var Allowed: boolean; const OldPosition, NewPosition: TVector3;
   const BecauseOfGravity: boolean);
 var
   OldHeight, NewHeight: Single;
@@ -206,7 +206,7 @@ begin
   end;
 end;
 
-function ColorFromHeight(Terrain: TTerrain; Height: Single): TVector3Single;
+function ColorFromHeight(Terrain: TTerrain; Height: Single): TVector3;
 var
   I: Integer;
 begin
@@ -217,10 +217,10 @@ begin
   Height := Height * 2000 - 1000;
 
   if Height < 0 then
-    Result := Vector3Single(0.5, 0.5, 1) { light blue } else
+    Result := Vector3(0.5, 0.5, 1) { light blue } else
   if Height < 500 then
-    Result := Vector3Single(0, Height / 500, 0) { green } else
-    Result := Vector3Single(Height / 500 - 1, 1, 0); { yellow }
+    Result := Vector3(0, Height / 500, 0) { green } else
+    Result := Vector3(Height / 500 - 1, 1, 0); { yellow }
 
   for I := 0 to 2 do
     Result[I] := Sqrt(Sin(Result[I] * 1.5));
@@ -233,7 +233,7 @@ begin
   Scene.DistanceCulling := VisibilityLimit;
 
   Scene.Attributes.WireframeEffect := weSilhouette;
-  Scene.Attributes.WireframeColor := Vector3Single(0, 0, 0);
+  Scene.Attributes.WireframeColor := Vector3(0, 0, 0);
   Scene.Attributes.LineWidth := 10;
   Scene.Attributes.SilhouetteScale := 10.1;
   Scene.Attributes.SilhouetteBias := 0.2;
@@ -261,24 +261,24 @@ var
     Size = 3;
   begin
     Node := Terrain.CreateNode(1 shl 6 + 1, Size * 2,
-      Vector2Single(-Size, Size), Vector2Single(-Size, Size), @ColorFromHeight);
+      Vector2(-Size, Size), Vector2(-Size, Size), @ColorFromHeight);
 
     Texture := TImageTextureNode.Create('', '');
     Texture.FdUrl.Items.Add(ApplicationData('level/textures/sand.png'));
     Node.Appearance.FdTexture.Value := Texture;
 
     TextureTransform := TTextureTransformNode.Create('', '');
-    TextureTransform.FdScale.Value := Vector2Single(10, 10);
-    Node.Appearance.FdTextureTransform.Value := TextureTransform;
+    TextureTransform.Scale := Vector2(10, 10);
+    Node.Appearance.TextureTransform := TextureTransform;
 
     TerrainTransform := TTransformNode.Create('', '');
-    TerrainTransform.FdTranslation.Send(Vector3Single(
+    TerrainTransform.Translation := Vector3(
       -RealSize / 2, YShift,
-      -RealSize / 2));
-    TerrainTransform.FdScale.Send(Vector3Single(
+      -RealSize / 2);
+    TerrainTransform.Scale := Vector3(
       RealSize * 1/Size,
       RealSize * 1/Size,
-      RealSize * 1/Size));
+      RealSize * 1/Size);
     TerrainTransform.FdChildren.Add(Node);
 
     Root := TX3DRootNode.Create('', '');
@@ -330,7 +330,7 @@ var
   end;
 
 var
-  InitialPosition, InitialDirection, InitialUp, GravityUp: TVector3Single;
+  InitialPosition, InitialDirection, InitialUp, GravityUp: TVector3;
   NewBackground: TAbstractBackgroundNode;
 begin
   FreeAndNil(CurrentPartScene);
@@ -361,7 +361,7 @@ begin
 
   { do not use automatic MoveLimit from SceneManager.LoadLevel, it is not useful
     when we dynamically switch parts, and it doesn't make sense on pIsland part. }
-  SceneManager.MoveLimit := EmptyBox3D;
+  SceneManager.MoveLimit := TBox3D.Empty;
 
   if CurrentPartScene.ViewpointStack.Top <> nil then
   begin
@@ -382,8 +382,8 @@ begin
   begin
     CreatureResource := Resources.FindName('Spider') as TCreatureResource;
     CreatureResource.CreateCreature(SceneManager.Items,
-      Vector3Single(-36.133621215820313, 5.122468948364258, 126.4378662109375),
-      Vector3Single(0.45594298839569092, -0.24616692960262299, -0.85528826713562012)
+      Vector3(-36.133621215820313, 5.122468948364258, 126.4378662109375),
+      Vector3(0.45594298839569092, -0.24616692960262299, -0.85528826713562012)
     );
   end;}
 end;
@@ -437,7 +437,7 @@ begin
     TScreenEffectNode, 'PaintedEffect', false) as TScreenEffectNode;
 
   AvatarTransform := T3DTransform.Create(SceneManager);
-  AvatarTransform.Scale := Vector3Single(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
+  AvatarTransform.Scale := Vector3(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
   SceneManager.Items.Add(AvatarTransform);
 
   Avatar := TCastleScene.Create(SceneManager);
@@ -529,27 +529,23 @@ begin
     begin
       if Event.IsKey(K_9) then
       begin
-        TerrainTransform.FdScale.Value -= Vector3Single(0.5, 0.5, 0.5);
-        TerrainTransform.FdScale.Changed;
-        WritelnLog('Terrain', VectorToNiceStr(TerrainTransform.FdScale.Value));
+        TerrainTransform.Scale := TerrainTransform.Scale - Vector3(0.5, 0.5, 0.5);
+        WritelnLog('Terrain', TerrainTransform.FdScale.Value.ToString);
       end;
       if Event.IsKey(K_0) then
       begin
-        TerrainTransform.FdScale.Value += Vector3Single(0.5, 0.5, 0.5);
-        TerrainTransform.FdScale.Changed;
-        WritelnLog('Terrain', VectorToNiceStr(TerrainTransform.FdScale.Value));
+        TerrainTransform.Scale := TerrainTransform.Scale + Vector3(0.5, 0.5, 0.5);
+        WritelnLog('Terrain', TerrainTransform.FdScale.Value.ToString);
       end;
       if Event.IsKey(K_P) then
       begin
-        TerrainTransform.FdTranslation.Value[1] -= 0.5;
-        TerrainTransform.FdTranslation.Changed;
-        WritelnLog('Terrain', FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
+        TerrainTransform.Translation := TerrainTransform.Translation - Vector3(0, 0.5, 0);
+        WritelnLog('Terrain', Format('%f', [TerrainTransform.FdTranslation.Value[1]]));
       end;
       if Event.IsKey(K_O) then
       begin
-        TerrainTransform.FdTranslation.Value[1] += 0.5;
-        TerrainTransform.FdTranslation.Changed;
-        WritelnLog('Terrain', FloatToNiceStr(TerrainTransform.FdTranslation.Value[1]));
+        TerrainTransform.Translation := TerrainTransform.Translation + Vector3(0, 0.5, 0);
+        WritelnLog('Terrain', Format('%f', [TerrainTransform.FdTranslation.Value[1]]));
       end;
     end;
   end;
@@ -573,16 +569,16 @@ procedure TGameUI.Update(const SecondsPassed: Single;
 
   procedure Wind;
   var
-    WindMove, OldPosition, NewPosition: TVector3Single;
+    WindMove, OldPosition, NewPosition: TVector3;
     WindDirectionAngle: Single;
-    WindDirection: TVector3Single;
+    WindDirection: TVector3;
     WindSpeed: Single;
     S, C: Extended;
   begin
     WindTime += SecondsPassed;
     WindDirectionAngle := BlurredInterpolatedNoise2D_Spline(WindTime * 2, 0, SeedDirection) * 2 * Pi;
     SinCos(WindDirectionAngle, S, C);
-    WindDirection := Vector3Single(S, 0, C);
+    WindDirection := Vector3(S, 0, C);
     WindSpeed := 0.1 + BlurredInterpolatedNoise2D_Spline(WindTime / 2, 0, SeedSpeed) * 1.0;
 
     WindMove := WindDirection * WindSpeed * SecondsPassed;
@@ -608,7 +604,7 @@ begin
   if MoveSpeedTarget < Player.Camera.MoveSpeed then
     Player.Camera.MoveSpeed := Max(Player.Camera.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
 
-  //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', VectorToNiceStr(AvatarTransform.Translation));
+  //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
 
   Wind;
 
@@ -635,7 +631,7 @@ begin
     otherwise there will be a visible delay between camera move/rotations
     and the avatar move/rotations. }
 
-  WaterTransform.Translation := Vector3Single(
+  WaterTransform.Translation := Vector3(
     Player.Position[0], WaterTransform.FdTranslation.Value[1],
     Player.Position[2]);
 
@@ -656,24 +652,24 @@ end;
 procedure TGameDebug3D.Render(const Frustum: TFrustum; const Params: TRenderParams);
 
   {$ifndef OpenGLES} // TODO-es
-  procedure VisualizeRayDown(Point: TVector3Single);
+  procedure VisualizeRayDown(Point: TVector3);
   begin
     Point[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
-//    Writeln(VectorToNiceStr(Point));
+//    Writeln(Point.ToString);
     glVertexv(Point);
 
     Point[SceneManager.Items.GravityCoordinate] := +HeightOverAvatar;
-//    Writeln(VectorToNiceStr(Point));
+//    Writeln(Point.ToString);
     glVertexv(Point);
 
     {glDrawBox3DWire(Box3D(
       Point,
-      Point - Vector3Single(0, 2 * HeightOverEverything, 0)));}
+      Point - Vector3(0, 2 * HeightOverEverything, 0)));}
   end;
   {$endif}
 
 var
-  Point, Side: TVector3Single;
+  Point, Side: TVector3;
   Margin: Single;
 begin
   inherited;
@@ -702,7 +698,7 @@ begin
           VisualizeRayDown(Player.Camera.Position);
 
           Point := AvatarPositionFromCamera(Player.Camera.Position);
-          Side := VectorProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+          Side := TVector3.CrossProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
 
           VisualizeRayDown(Point);
 
