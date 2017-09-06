@@ -510,8 +510,7 @@ begin
     end;
     if Event.IsKey(K_5) then
     begin
-      SceneManager.Camera := SceneManager.CreateDefaultCamera;
-      (SceneManager.Camera as TUniversalCamera).NavigationType := ntExamine;
+      SceneManager.NavigationType := ntExamine;
     end;
     if Event.IsKey(K_6) then
     begin
