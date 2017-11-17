@@ -49,7 +49,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
-  CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer, CastlePrecalculatedAnimation,
+  CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer,
   CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise,
   CastleWindowTouch, CastleControls, CastleFrustum;
 

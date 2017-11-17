@@ -29,7 +29,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleScene, X3DNodes,
   CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
-  CastleRenderer, Castle3D, CastlePrecalculatedAnimation, CastleLevels, CastlePlayer,
+  CastleRenderer, Castle3D, CastleLevels, CastlePlayer,
   CastleUIControls, CastleSoundEngine,
   GamePlay, GamePlayer, GameTitle;
 
