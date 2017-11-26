@@ -62,8 +62,8 @@ type
   end;
 
   TGameDebug3D = class(T3D)
-    function BoundingBox: TBox3D; override;
-    procedure Render(const Frustum: TFrustum; const Params: TRenderParams); override;
+    function LocalBoundingBox: TBox3D; override;
+    procedure LocalRender(const Frustum: TFrustum; const Params: TRenderParams); override;
   end;
 
 var
@@ -643,12 +643,12 @@ end;
 
 { TGameDebug3D --------------------------------------------------------------- }
 
-function TGameDebug3D.BoundingBox: TBox3D;
+function TGameDebug3D.LocalBoundingBox: TBox3D;
 begin
   Result := SceneManager.MainScene.BoundingBox;
 end;
 
-procedure TGameDebug3D.Render(const Frustum: TFrustum; const Params: TRenderParams);
+procedure TGameDebug3D.LocalRender(const Frustum: TFrustum; const Params: TRenderParams);
 
   {$ifndef OpenGLES} // TODO-es
   procedure VisualizeRayDown(Point: TVector3);
