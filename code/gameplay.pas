@@ -679,7 +679,7 @@ begin
   begin
     {$ifndef OpenGLES} // TODO-es
     glPushMatrix;
-      glMultMatrix(Params.RenderTransform);
+      glMultMatrix(Params.Transform);
 
       glPushAttrib(GL_ENABLE_BIT or GL_LIGHTING_BIT);
         GLEnableTexture(etNone);
