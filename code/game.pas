@@ -29,8 +29,8 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleScene, X3DNodes,
   CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
-  CastleRenderer, Castle3D, CastleLevels, CastlePlayer,
-  CastleUIControls, CastleSoundEngine,
+  CastleRenderer, CastleTransform, CastleLevels, CastlePlayer,
+  CastleUIControls, CastleSoundEngine, CastleGLUtils,
   GamePlay, GamePlayer, GameTitle;
 
 { One-time initialization. }
@@ -47,6 +47,10 @@ begin
   Levels.AddFromFile(ApplicationData('title/level.xml'));
   Levels.AddFromFile(ApplicationData('level/level.xml'));
 
+  { EnableFixedFunction is needed for debug view (Ctrl + 8) to work,
+    also water works better and faster in this case on trees (initial) level. }
+  GLFeatures.EnableFixedFunction := true;
+
   StartPlayer;
   if UseDebugPart then
     StartGame else
@@ -60,7 +64,7 @@ end;
 
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
 var
-  Pos, Dir, Up, GravityUp: TVector3Single;
+  Pos, Dir, Up, GravityUp: TVector3;
 begin
   if EnableDebugKeys(Container) then
   begin

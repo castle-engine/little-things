@@ -24,7 +24,7 @@ unit GamePlay;
 
 interface
 
-uses CastleScene, Castle3D, X3DNodes, CastlePlayer, CastleLevels,
+uses CastleScene, CastleTransform, X3DNodes, CastlePlayer, CastleLevels,
   CastleKeysMouse, CastleUIControls;
 
 type
@@ -50,7 +50,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer,
-  CastleSceneManager, CastleColors, CastleRenderingCamera, CastleNoise,
+  CastleSceneManager, CastleColors, CastleNoise,
   CastleWindowTouch, CastleControls, CastleFrustum;
 
 type
@@ -61,9 +61,9 @@ type
     procedure BeforeRender; override;
   end;
 
-  TGameDebug3D = class(T3D)
+  TGameDebug3D = class(TCastleTransform)
     function LocalBoundingBox: TBox3D; override;
-    procedure LocalRender(const Frustum: TFrustum; const Params: TRenderParams); override;
+    procedure LocalRender(const Params: TRenderParams); override;
   end;
 
 var
@@ -78,7 +78,7 @@ var
   WaterTransform: TTransformNode;
   DogTransform: TTransformNode;
   PaintedEffect: TScreenEffectNode;
-  AvatarTransform: T3DTransform;
+  AvatarTransform: TCastleTransform;
 
   WindTime: TFloatTime;
   SeedDirection: Cardinal;
@@ -212,7 +212,7 @@ var
 begin
   { scale height down by Amplitude, to keep nice colors regardless of Amplitude }
   if Terrain is TTerrainNoise then
-    Height /= TTerrainNoise(Terrain).Amplitude;
+    Height := Height / TTerrainNoise(Terrain).Amplitude;
   { some hacks to hit interesting colors }
   Height := Height * 2000 - 1000;
 
@@ -279,11 +279,11 @@ var
       RealSize * 1/Size,
       RealSize * 1/Size,
       RealSize * 1/Size);
-    TerrainTransform.FdChildren.Add(Node);
+    TerrainTransform.AddChildren(Node);
 
     Root := TX3DRootNode.Create('', '');
-    Root.FdChildren.Add(TerrainTransform);
-    Root.FdChildren.Add(Load3D(ApplicationData('level/' + PartName + '/part_final.x3dv')));
+    Root.AddChildren(TerrainTransform);
+    Root.AddChildren(Load3D(ApplicationData('level/' + PartName + '/part_final.x3dv')));
 
     Result := TCastleScene.Create(SceneManager);
     Result.Load(Root, true);
@@ -436,7 +436,7 @@ begin
   PaintedEffect := SceneManager.MainScene.RootNode.TryFindNodeByName(
     TScreenEffectNode, 'PaintedEffect', false) as TScreenEffectNode;
 
-  AvatarTransform := T3DTransform.Create(SceneManager);
+  AvatarTransform := TCastleTransform.Create(SceneManager);
   AvatarTransform.Scale := Vector3(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
   SceneManager.Items.Add(AvatarTransform);
 
@@ -574,7 +574,7 @@ procedure TGameUI.Update(const SecondsPassed: Single;
     WindSpeed: Single;
     S, C: Extended;
   begin
-    WindTime += SecondsPassed;
+    WindTime := WindTime + SecondsPassed;
     WindDirectionAngle := BlurredInterpolatedNoise2D_Spline(WindTime * 2, 0, SeedDirection) * 2 * Pi;
     SinCos(WindDirectionAngle, S, C);
     WindDirection := Vector3(S, 0, C);
@@ -631,12 +631,12 @@ begin
     and the avatar move/rotations. }
 
   WaterTransform.Translation := Vector3(
-    Player.Position[0], WaterTransform.FdTranslation.Value[1],
-    Player.Position[2]);
+    Player.Translation[0], WaterTransform.FdTranslation.Value[1],
+    Player.Translation[2]);
 
   { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
   AvatarTransform.Rotation :=
-    CamDirUp2Orient(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+    OrientationFromDirectionUp(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
 
   AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
 end;
@@ -648,7 +648,7 @@ begin
   Result := SceneManager.MainScene.BoundingBox;
 end;
 
-procedure TGameDebug3D.LocalRender(const Frustum: TFrustum; const Params: TRenderParams);
+procedure TGameDebug3D.LocalRender(const Params: TRenderParams);
 
   {$ifndef OpenGLES} // TODO-es
   procedure VisualizeRayDown(Point: TVector3);
@@ -679,7 +679,7 @@ begin
   begin
     {$ifndef OpenGLES} // TODO-es
     glPushMatrix;
-      glMultMatrix(Params.Transform);
+      glMultMatrix(Params.Transform^);
 
       glPushAttrib(GL_ENABLE_BIT or GL_LIGHTING_BIT);
         GLEnableTexture(etNone);
@@ -689,7 +689,7 @@ begin
         glDisable(GL_ALPHA_TEST); { saved by GL_ENABLE_BIT }
         glDisable(GL_FOG); { saved by GL_ENABLE_BIT }
         glEnable(GL_DEPTH_TEST);
-        CurrentProgram := nil;
+        TGLSLProgram.Current := nil;
 
         glColorv(Black);
 
