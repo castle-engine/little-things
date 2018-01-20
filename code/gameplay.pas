@@ -51,7 +51,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer,
   CastleSceneManager, CastleColors, CastleNoise,
-  CastleWindowTouch, CastleControls, CastleFrustum;
+  CastleWindowTouch, CastleControls, CastleFrustum, CastleRectangles;
 
 type
   { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
@@ -206,26 +206,6 @@ begin
   end;
 end;
 
-function ColorFromHeight(Terrain: TTerrain; Height: Single): TVector3;
-var
-  I: Integer;
-begin
-  { scale height down by Amplitude, to keep nice colors regardless of Amplitude }
-  if Terrain is TTerrainNoise then
-    Height := Height / TTerrainNoise(Terrain).Amplitude;
-  { some hacks to hit interesting colors }
-  Height := Height * 2000 - 1000;
-
-  if Height < 0 then
-    Result := Vector3(0.5, 0.5, 1) { light blue } else
-  if Height < 500 then
-    Result := Vector3(0, Height / 500, 0) { green } else
-    Result := Vector3(Height / 500 - 1, 1, 0); { yellow }
-
-  for I := 0 to 2 do
-    Result[I] := Sqrt(Sin(Result[I] * 1.5));
-end;
-
 procedure ConfigureScene(const Scene: TCastleScene);
 begin
   Scene.Spatial := [ssRendering, ssDynamicCollisions];
@@ -253,25 +233,32 @@ var
   function LoadTerrainPart(const Terrain: TTerrain; const RealSize: Single = 31.33 * 3;
     const YShift: Single = -19): TCastleScene;
   var
-    Node: TShapeNode;
+    TerrainNode: TAbstractChildNode;
     Root: TX3DRootNode;
+    Appearance: TAppearanceNode;
     Texture: TImageTextureNode;
     TextureTransform: TTextureTransformNode;
+    Range: TFloatRectangle;
   const
     Size = 3;
   begin
-    Node := Terrain.CreateNode(1 shl 6 + 1, Size * 2,
-      Vector2(-Size, Size), Vector2(-Size, Size), @ColorFromHeight);
+    Appearance := TAppearanceNode.Create;
 
-    Texture := TImageTextureNode.Create('', '');
-    Texture.FdUrl.Items.Add(ApplicationData('level/textures/sand.png'));
-    Node.Appearance.FdTexture.Value := Texture;
+    Texture := TImageTextureNode.Create;
+    Texture.SetUrl([ApplicationData('level/textures/sand.png')]);
+    Appearance.Texture := Texture;
 
-    TextureTransform := TTextureTransformNode.Create('', '');
+    TextureTransform := TTextureTransformNode.Create;
     TextureTransform.Scale := Vector2(10, 10);
-    Node.Appearance.TextureTransform := TextureTransform;
+    Appearance.TextureTransform := TextureTransform;
 
-    TerrainTransform := TTransformNode.Create('', '');
+    Appearance.Material := TMaterialNode.Create;
+    Appearance.Material.DiffuseColor := Vector3(1, 1, 0); { yellow }
+
+    Range := FloatRectangle(-Size, -Size, Size * 2, Size * 2);
+    TerrainNode := Terrain.CreateNode(1 shl 6 + 1, Range, Range, Appearance);
+
+    TerrainTransform := TTransformNode.Create;
     TerrainTransform.Translation := Vector3(
       -RealSize / 2, YShift,
       -RealSize / 2);
@@ -279,9 +266,9 @@ var
       RealSize * 1/Size,
       RealSize * 1/Size,
       RealSize * 1/Size);
-    TerrainTransform.AddChildren(Node);
+    TerrainTransform.AddChildren(TerrainNode);
 
-    Root := TX3DRootNode.Create('', '');
+    Root := TX3DRootNode.Create;
     Root.AddChildren(TerrainTransform);
     Root.AddChildren(Load3D(ApplicationData('level/' + PartName + '/part_final.x3dv')));
 
@@ -318,7 +305,7 @@ var
       Terrain.Heterogeneous := 0.22;
       Terrain.Amplitude := 0.75;
       Terrain.Frequency := 0.9;
-      Terrain.Seed := 1550516520; //Random(High(LongInt)); Writeln('seed is ', Terrain.Seed);
+      Terrain.Seed := 1073933886; // Random(High(LongInt)); Writeln('seed is ', Terrain.Seed);
       Result := LoadTerrainPart(Terrain);
     finally FreeAndNil(Terrain) end;
   end;
@@ -430,7 +417,7 @@ begin
     TTransformNode, 'WaterTransform', false) as TTransformNode;
   if SceneManager.MainScene.NavigationInfoStack.Top <> nil then
   begin
-    VisibilityLimit := SceneManager.MainScene.NavigationInfoStack.Top.FdVisibilityLimit.Value;
+    VisibilityLimit := SceneManager.MainScene.NavigationInfoStack.Top.VisibilityLimit;
     WritelnLog('little_things', 'Using VisibilityLimit %f', [VisibilityLimit]);
   end;
   PaintedEffect := SceneManager.MainScene.RootNode.TryFindNodeByName(
@@ -529,22 +516,22 @@ begin
       if Event.IsKey(K_9) then
       begin
         TerrainTransform.Scale := TerrainTransform.Scale - Vector3(0.5, 0.5, 0.5);
-        WritelnLog('Terrain', TerrainTransform.FdScale.Value.ToString);
+        WritelnLog('Terrain', TerrainTransform.Scale.ToString);
       end;
       if Event.IsKey(K_0) then
       begin
         TerrainTransform.Scale := TerrainTransform.Scale + Vector3(0.5, 0.5, 0.5);
-        WritelnLog('Terrain', TerrainTransform.FdScale.Value.ToString);
+        WritelnLog('Terrain', TerrainTransform.Scale.ToString);
       end;
       if Event.IsKey(K_P) then
       begin
         TerrainTransform.Translation := TerrainTransform.Translation - Vector3(0, 0.5, 0);
-        WritelnLog('Terrain', Format('%f', [TerrainTransform.FdTranslation.Value[1]]));
+        WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
       end;
       if Event.IsKey(K_O) then
       begin
         TerrainTransform.Translation := TerrainTransform.Translation + Vector3(0, 0.5, 0);
-        WritelnLog('Terrain', Format('%f', [TerrainTransform.FdTranslation.Value[1]]));
+        WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
       end;
     end;
   end;
@@ -613,7 +600,7 @@ begin
   CurrentPartScene.CameraChanged(SceneManager.Camera);
 
   if (DogTransform <> nil) and
-     (PointsDistanceSqr(DogTransform.FdTranslation.Value, Player.Camera.Position) <
+     (PointsDistanceSqr(DogTransform.Translation, Player.Camera.Position) <
       Sqr(DistanceToDogToFinish)) then
   begin
     if CurrentPart = High(CurrentPart) then
@@ -631,7 +618,7 @@ begin
     and the avatar move/rotations. }
 
   WaterTransform.Translation := Vector3(
-    Player.Translation[0], WaterTransform.FdTranslation.Value[1],
+    Player.Translation[0], WaterTransform.Translation[1],
     Player.Translation[2]);
 
   { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
