@@ -662,7 +662,7 @@ begin
 
   if GetExists and
     (not Params.Transparent) and
-    (not Params.ShadowVolumesReceivers) then
+    (false in Params.ShadowVolumesReceivers) then
   begin
     {$ifndef OpenGLES} // TODO-es
     glPushMatrix;
