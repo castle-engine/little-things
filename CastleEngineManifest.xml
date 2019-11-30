@@ -3,7 +3,8 @@
   caption="Little Things"
   qualified_name="net.sourceforge.castleengine.littlethings"
   standalone_source="code/little_things.lpr"
-  android_source="code/little_things_android.lpr">
+  game_units="Game"
+>
   <version value="1.1.4" code="9" />
   <icons>
     <icon path="icons/icon2.png" />
