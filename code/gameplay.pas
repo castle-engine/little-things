@@ -239,6 +239,7 @@ var
     Texture: TImageTextureNode;
     TextureTransform: TTextureTransformNode;
     Range: TFloatRectangle;
+    Material: TMaterialNode;
   const
     Size = 3;
   begin
@@ -252,8 +253,9 @@ var
     TextureTransform.Scale := Vector2(10, 10);
     Appearance.TextureTransform := TextureTransform;
 
-    Appearance.Material := TMaterialNode.Create;
-    Appearance.Material.DiffuseColor := Vector3(1, 1, 0); { yellow }
+    Material := TMaterialNode.Create;
+    Material.DiffuseColor := Vector3(1, 1, 0); { yellow }
+    Appearance.Material := Material;
 
     Range := FloatRectangle(-Size, -Size, Size * 2, Size * 2);
     TerrainNode := Terrain.CreateNode(1 shl 6 + 1, Range, Range, Appearance);
