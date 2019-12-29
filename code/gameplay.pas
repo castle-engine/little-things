@@ -185,24 +185,27 @@ end;
 
 type
   TGame = class
-    class procedure MoveAllowed(Sender: TCastleSceneManager;
-      var Allowed: boolean; const OldPosition, NewPosition: TVector3;
-      const BecauseOfGravity: boolean);
+    class function MoveAllowed(Navigation: TCastleWalkNavigation;
+      const ProposedNewPos: TVector3;
+      out NewPos: TVector3;
+      const BecauseOfGravity: boolean): Boolean;
   end;
 
-class procedure TGame.MoveAllowed(Sender: TCastleSceneManager;
-  var Allowed: boolean; const OldPosition, NewPosition: TVector3;
-  const BecauseOfGravity: boolean);
+class function TGame.MoveAllowed(Navigation: TCastleWalkNavigation;
+  const ProposedNewPos: TVector3;
+  out NewPos: TVector3;
+  const BecauseOfGravity: boolean): Boolean;
 var
   OldHeight, NewHeight: Single;
 begin
-  Allowed := Allowed and (not BecauseOfGravity);
-  if Allowed then
+  NewPos := ProposedNewPos;
+  Result := not BecauseOfGravity;
+  if Result then
   begin
-    if (not OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater, NewHeight)) and
-       (OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater, OldHeight) or
+    if (not OverWaterAround(AvatarPositionFromCamera(NewPos), MarginOverWater, NewHeight)) and
+       (OverWaterAround(AvatarPositionFromCamera(Navigation.Camera.Position), MarginOverWater, OldHeight) or
         (OldHeight > NewHeight)) then
-      Allowed := false;
+      Result := false;
   end;
 end;
 
@@ -411,7 +414,7 @@ begin
   Input_CancelFlying.MakeClear(true);
 
   SceneManager.LoadLevel('water');
-  SceneManager.OnMoveAllowed := @TGame(nil).MoveAllowed;
+  Player.Navigation.OnMoveAllowed := @TGame(nil).MoveAllowed;
   SceneManager.UseGlobalLights := true;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   SceneManager.MainScene.Collides := false;
@@ -445,7 +448,7 @@ begin
   Player.Camera.MouseLook := true;
   {$endif}
 
-  DefaultMoveSpeed := Player.Camera.MoveSpeed;
+  DefaultMoveSpeed := Player.Navigation.MoveSpeed;
 
   if UseDebugPart then
     LoadPart(DebugPart) else
