@@ -34,7 +34,6 @@ begin
   Player := TPlayer.Create(SceneManager);
   Player.Camera.RotationHorizontalPivot := 5;
 //  Player.Flying := true; // no gravity
-  SceneManager.Items.Add(Player);
   SceneManager.Player := Player;
 end;
 
