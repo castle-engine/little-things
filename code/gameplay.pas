@@ -55,7 +55,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
 
 type
   { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
-  TGameUI = class(TUIControl)
+  TGameUI = class(TCastleUserInterface)
     procedure Update(const SecondsPassed: Single;
       var HandleInput: Boolean); override;
     procedure BeforeRender; override;
@@ -105,7 +105,7 @@ const
 function AvatarPositionFromCamera(const CameraPosition: TVector3): TVector3;
 begin
   Result := CameraPosition +
-    Player.Camera.DirectionInGravityPlane * Player.Camera.RotationHorizontalPivot;
+    Player.Navigation.DirectionInGravityPlane * Player.Navigation.RotationHorizontalPivot;
   Result[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
@@ -114,17 +114,17 @@ var
   Collision: TRayCollision;
 begin
   Point[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
-  SceneManager.MainScene.Disable; // do not hit water surface
+  SceneManager.Items.MainScene.Disable; // do not hit water surface
   AvatarTransform.Disable; // do not hit avatar
   try
-    Collision := SceneManager.Items.WorldRay(Point, -SceneManager.GravityUp);
+    Collision := SceneManager.Items.WorldRay(Point, -SceneManager.Camera.GravityUp);
     Result := (Collision = nil) or
               (Collision.First.Point[SceneManager.Items.GravityCoordinate] < WaterHeight);
     if not Result then
       Height := Collision.First.Point[SceneManager.Items.GravityCoordinate];
     FreeAndNil(Collision);
   finally
-    SceneManager.MainScene.Enable;
+    SceneManager.Items.MainScene.Enable;
     AvatarTransform.Enable;
   end;
 end;
@@ -141,19 +141,19 @@ function OverWaterAround(const Point: TVector3; const Margin: Single;
 var
   Side: TVector3;
 begin
-  Side := TVector3.CrossProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+  Side := TVector3.CrossProduct(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
   Result :=
     { to protect forward movement }
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin                    , Height) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin    , Height) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin    , Height) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2, Height) and
-    OverWater(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2, Height) and
+    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin                    , Height) and
+    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin    , Height) and
+    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin    , Height) and
+    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2, Height) and
+    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2, Height) and
 
     { to protect backward movement }
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2                , Height) and
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
-    OverWater(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
+    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2                , Height) and
+    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
+    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
     // OverWater(Point + Vector3(-Margin, 0, -Margin)) and
     // OverWater(Point + Vector3(-Margin, 0,  Margin)) and
     // OverWater(Point + Vector3( Margin, 0, -Margin)) and
@@ -247,7 +247,7 @@ var
     Appearance := TAppearanceNode.Create;
 
     Texture := TImageTextureNode.Create;
-    Texture.SetUrl([ApplicationData('level/textures/sand.png')]);
+    Texture.SetUrl(['castle-data:/level/textures/sand.png']);
     Appearance.Texture := Texture;
 
     TextureTransform := TTextureTransformNode.Create;
@@ -273,7 +273,7 @@ var
 
     Root := TX3DRootNode.Create;
     Root.AddChildren(TerrainTransform);
-    Root.AddChildren(Load3D(ApplicationData('level/' + PartName + '/part_final.x3dv')));
+    Root.AddChildren(LoadNode('castle-data:/level/' + PartName + '/part_final.x3dv'));
 
     Result := TCastleScene.Create(SceneManager);
     Result.Load(Root, true);
@@ -286,7 +286,7 @@ var
   begin
     Terrain := TTerrainImage.Create;
     try
-      Terrain.LoadImage(ApplicationData('level/lake/terrain.png'));
+      Terrain.LoadImage('castle-data:/level/lake/terrain.png');
       Terrain.ImageHeightScale := 1;
       Terrain.ImageX1 := -3;
       Terrain.ImageY1 := -3;
@@ -338,7 +338,7 @@ begin
 
   PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
 
-  NewBackground := SceneManager.MainScene.RootNode.TryFindNodeByName(
+  NewBackground := SceneManager.Items.MainScene.RootNode.TryFindNodeByName(
     TAbstractBackgroundNode, 'Background' + PartName, false) as TAbstractBackgroundNode;
   if NewBackground <> nil then
   begin
@@ -351,12 +351,12 @@ begin
 
   { do not use automatic MoveLimit from SceneManager.LoadLevel, it is not useful
     when we dynamically switch parts, and it doesn't make sense on pIsland part. }
-  SceneManager.MoveLimit := TBox3D.Empty;
+  SceneManager.Items.MoveLimit := TBox3D.Empty;
 
   if CurrentPartScene.ViewpointStack.Top <> nil then
   begin
     CurrentPartScene.ViewpointStack.Top.GetView(InitialPosition, InitialDirection, InitialUp, GravityUp);
-    Player.Camera.SetView(InitialPosition, InitialDirection, InitialUp);
+    SceneManager.Camera.SetView(InitialPosition, InitialDirection, InitialUp);
   end;
 
   CurrentPart := Part;
@@ -415,15 +415,15 @@ begin
   Player.Navigation.OnMoveAllowed := @TGame(nil).MoveAllowed;
   SceneManager.UseGlobalLights := true;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
-  SceneManager.MainScene.Collides := false;
-  WaterTransform := SceneManager.MainScene.RootNode.FindNodeByName(
+  SceneManager.Items.MainScene.Collides := false;
+  WaterTransform := SceneManager.Items.MainScene.RootNode.FindNodeByName(
     TTransformNode, 'WaterTransform', false) as TTransformNode;
-  if SceneManager.MainScene.NavigationInfoStack.Top <> nil then
+  if SceneManager.Items.MainScene.NavigationInfoStack.Top <> nil then
   begin
-    VisibilityLimit := SceneManager.MainScene.NavigationInfoStack.Top.VisibilityLimit;
+    VisibilityLimit := SceneManager.Items.MainScene.NavigationInfoStack.Top.VisibilityLimit;
     WritelnLog('little_things', 'Using VisibilityLimit %f', [VisibilityLimit]);
   end;
-  PaintedEffect := SceneManager.MainScene.RootNode.TryFindNodeByName(
+  PaintedEffect := SceneManager.Items.MainScene.RootNode.TryFindNodeByName(
     TScreenEffectNode, 'PaintedEffect', false) as TScreenEffectNode;
 
   AvatarTransform := TCastleTransform.Create(SceneManager);
@@ -431,9 +431,9 @@ begin
   SceneManager.Items.Add(AvatarTransform);
 
   Avatar := TCastleScene.Create(SceneManager);
-  Avatar.Load(ApplicationData('avatar/avatar.kanim'));
+  Avatar.Load('castle-data:/avatar/avatar.kanim');
   Avatar.ProcessEvents := true;
-  Avatar.PlayAnimation('animation', paForceLooping);
+  Avatar.PlayAnimation('animation', true);
   Avatar.TimePlayingSpeed := 10;
   AvatarTransform.Add(Avatar);
 
@@ -443,7 +443,7 @@ begin
   Window.TouchInterface := tiCtlWalkDragRotate;
   Player.EnableCameraDragging := true;
   {$else}
-  Player.Camera.MouseLook := true;
+  Player.Navigation.MouseLook := true;
   {$endif}
 
   DefaultMoveSpeed := Player.Navigation.MoveSpeed;
@@ -571,12 +571,12 @@ procedure TGameUI.Update(const SecondsPassed: Single;
     WindSpeed := 0.1 + BlurredInterpolatedNoise2D_Spline(WindTime / 2, 0, SeedSpeed) * 1.0;
 
     WindMove := WindDirection * WindSpeed * SecondsPassed;
-    OldPosition := Player.Camera.Position;
+    OldPosition := SceneManager.Camera.Position;
     NewPosition := OldPosition + WindMove;
 
     if OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater) and
        OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater) then
-      Player.Camera.Position := NewPosition;
+      SceneManager.Camera.Position := NewPosition;
   end;
 
 const
@@ -588,12 +588,12 @@ begin
   inherited;
 
   MoveSpeedTarget := DefaultMoveSpeed * OverWaterFactor(AvatarTransform.Translation);
-  if MoveSpeedTarget > Player.Camera.MoveSpeed then
-    Player.Camera.MoveSpeed := Min(Player.Camera.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
-  if MoveSpeedTarget < Player.Camera.MoveSpeed then
-    Player.Camera.MoveSpeed := Max(Player.Camera.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
+  if MoveSpeedTarget > Player.Navigation.MoveSpeed then
+    Player.Navigation.MoveSpeed := Min(Player.Navigation.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
+  if MoveSpeedTarget < Player.Navigation.MoveSpeed then
+    Player.Navigation.MoveSpeed := Max(Player.Navigation.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
 
-  //Writeln(Player.Camera.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
+  //Writeln(Player.Navigation.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
 
   Wind;
 
@@ -603,7 +603,7 @@ begin
   CurrentPartScene.CameraChanged(SceneManager.Camera);
 
   if (DogTransform <> nil) and
-     (PointsDistanceSqr(DogTransform.Translation, Player.Camera.Position) <
+     (PointsDistanceSqr(DogTransform.Translation, SceneManager.Camera.Position) <
       Sqr(DistanceToDogToFinish)) then
   begin
     if CurrentPart = High(CurrentPart) then
@@ -626,16 +626,16 @@ begin
 
   { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
   AvatarTransform.Rotation :=
-    OrientationFromDirectionUp(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+    OrientationFromDirectionUp(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
-  AvatarTransform.Translation := AvatarPositionFromCamera(Player.Camera.Position);
+  AvatarTransform.Translation := AvatarPositionFromCamera(SceneManager.Camera.Position);
 end;
 
 { TGameDebug3D --------------------------------------------------------------- }
 
 function TGameDebug3D.LocalBoundingBox: TBox3D;
 begin
-  Result := SceneManager.MainScene.BoundingBox;
+  Result := SceneManager.Items.MainScene.BoundingBox;
 end;
 
 procedure TGameDebug3D.LocalRender(const Params: TRenderParams);
@@ -684,32 +684,32 @@ begin
         glColorv(Black);
 
         glBegin(GL_LINES);
-          VisualizeRayDown(Player.Camera.Position);
+          VisualizeRayDown(SceneManager.Camera.Position);
 
-          Point := AvatarPositionFromCamera(Player.Camera.Position);
-          Side := TVector3.CrossProduct(Player.Camera.DirectionInGravityPlane, SceneManager.GravityUp);
+          Point := AvatarPositionFromCamera(SceneManager.Camera.Position);
+          Side := TVector3.CrossProduct(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
           VisualizeRayDown(Point);
 
           Margin := MarginOverWater;
 
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
 
-          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2);
-          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 + Side * Margin);
-          VisualizeRayDown(Point - Player.Camera.DirectionInGravityPlane * Margin * 2 - Side * Margin);
+          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2);
+          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 + Side * Margin);
+          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 - Side * Margin);
 
           Margin := MarginOverWater / 2;
 
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin + Side * Margin / 2);
-          VisualizeRayDown(Point + Player.Camera.DirectionInGravityPlane * Margin - Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
         glEnd();
       glPopAttrib();
     glPopMatrix();

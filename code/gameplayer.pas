@@ -32,7 +32,7 @@ implementation
 procedure StartPlayer;
 begin
   Player := TPlayer.Create(SceneManager);
-  Player.Camera.RotationHorizontalPivot := 5;
+  Player.Navigation.RotationHorizontalPivot := 5;
 //  Player.Flying := true; // no gravity
   SceneManager.Player := Player;
 end;

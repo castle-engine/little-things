@@ -40,7 +40,7 @@ begin
   SceneManager := Window.SceneManager;
 
   SoundEngine.RepositoryURL := ApplicationData('sounds/index.xml');
-  SoundEngine.MusicPlayer.MusicVolume := 0.5;
+  SoundEngine.MusicPlayer.Volume := 0.5;
 
   //Resources.LoadFromFiles; // cannot search recursively in Android assets
   //Levels.LoadFromFiles; // cannot search recursively in Android assets
