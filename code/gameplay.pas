@@ -38,10 +38,10 @@ procedure StartGame;
 procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
 
 var
-  UseDebugPart: boolean = false;
+  UseDebugPart: Boolean = false;
   DebugPart: TPart = pIsland;
 
-function EnableDebugKeys(Container: TUIContainer): boolean;
+function EnableDebugKeys(Container: TUIContainer): Boolean;
 
 implementation
 
@@ -57,7 +57,7 @@ type
   { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
   TGameUI = class(TUIControl)
     procedure Update(const SecondsPassed: Single;
-      var HandleInput: boolean); override;
+      var HandleInput: Boolean); override;
     procedure BeforeRender; override;
   end;
 
@@ -69,8 +69,8 @@ type
 var
   DefaultMoveSpeed: Single;
   VisibilityLimit: Single;
-  RenderDebug3D: boolean;
-  GpuATI: boolean;
+  RenderDebug3D: Boolean;
+  GpuATI: Boolean;
 
   CurrentPart: TPart;
   CurrentPartScene: TCastleScene;
@@ -92,7 +92,7 @@ const
   MarginOverWater = 0.5;
 
   PartConfig: array [TPart] of record
-    PaintedEffect: boolean;
+    PaintedEffect: Boolean;
   end = (
     { forest } (PaintedEffect: true),
     { cave   } (PaintedEffect: false),
@@ -109,7 +109,7 @@ begin
   Result[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
-function OverWater(Point: TVector3; out Height: Single): boolean;
+function OverWater(Point: TVector3; out Height: Single): Boolean;
 var
   Collision: TRayCollision;
 begin
@@ -129,7 +129,7 @@ begin
   end;
 end;
 
-function OverWater(Point: TVector3): boolean;
+function OverWater(Point: TVector3): Boolean;
 var
   Height: Single;
 begin
@@ -137,7 +137,7 @@ begin
 end;
 
 function OverWaterAround(const Point: TVector3; const Margin: Single;
-  out Height: Single): boolean;
+  out Height: Single): Boolean;
 var
   Side: TVector3;
 begin
@@ -165,7 +165,7 @@ begin
     // OverWater(Point + Vector3(      0, 0,  Margin));
 end;
 
-function OverWaterAround(const Point: TVector3; const Margin: Single): boolean;
+function OverWaterAround(const Point: TVector3; const Margin: Single): Boolean;
 var
   Height: Single;
 begin
@@ -185,16 +185,14 @@ end;
 
 type
   TGame = class
-    class function MoveAllowed(Navigation: TCastleWalkNavigation;
-      const ProposedNewPos: TVector3;
-      out NewPos: TVector3;
-      const BecauseOfGravity: boolean): Boolean;
+    class function MoveAllowed(const Navigation: TCastleNavigation;
+      const OldPos, ProposedNewPos: TVector3; out NewPos: TVector3;
+      const  Radius: Single; const BecauseOfGravity: Boolean): Boolean;
   end;
 
-class function TGame.MoveAllowed(Navigation: TCastleWalkNavigation;
-  const ProposedNewPos: TVector3;
-  out NewPos: TVector3;
-  const BecauseOfGravity: boolean): Boolean;
+class function TGame.MoveAllowed(const Navigation: TCastleNavigation;
+  const OldPos, ProposedNewPos: TVector3; out NewPos: TVector3;
+  const  Radius: Single; const BecauseOfGravity: Boolean): Boolean;
 var
   OldHeight, NewHeight: Single;
 begin
@@ -203,7 +201,7 @@ begin
   if Result then
   begin
     if (not OverWaterAround(AvatarPositionFromCamera(NewPos), MarginOverWater, NewHeight)) and
-       (OverWaterAround(AvatarPositionFromCamera(Navigation.Camera.Position), MarginOverWater, OldHeight) or
+       (OverWaterAround(AvatarPositionFromCamera(OldPos), MarginOverWater, OldHeight) or
         (OldHeight > NewHeight)) then
       Result := false;
   end;
@@ -547,7 +545,7 @@ begin
     Window.Close;
 end;
 
-function EnableDebugKeys(Container: TUIContainer): boolean;
+function EnableDebugKeys(Container: TUIContainer): Boolean;
 begin
   { debug keys only with Ctrl }
   Result := Container.Pressed[K_Ctrl];
@@ -556,7 +554,7 @@ end;
 { TGameUI -------------------------------------------------------------------- }
 
 procedure TGameUI.Update(const SecondsPassed: Single;
-  var HandleInput: boolean);
+  var HandleInput: Boolean);
 
   procedure Wind;
   var
