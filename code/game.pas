@@ -70,7 +70,7 @@ begin
   begin
     if Event.IsKey(K_7) then
     begin
-      Player.Camera.GetView(Pos, Dir, Up, GravityUp);
+      SceneManager.Camera.GetView(Pos, Dir, Up, GravityUp);
       WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
     end;
   end;

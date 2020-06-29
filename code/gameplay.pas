@@ -105,7 +105,7 @@ const
 function AvatarPositionFromCamera(const CameraPosition: TVector3): TVector3;
 begin
   Result := CameraPosition +
-    Player.Navigation.DirectionInGravityPlane * Player.Navigation.RotationHorizontalPivot;
+    Player.WalkNavigation.DirectionInGravityPlane * Player.WalkNavigation.RotationHorizontalPivot;
   Result[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
@@ -141,19 +141,19 @@ function OverWaterAround(const Point: TVector3; const Margin: Single;
 var
   Side: TVector3;
 begin
-  Side := TVector3.CrossProduct(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
+  Side := TVector3.CrossProduct(Player.WalkNavigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
   Result :=
     { to protect forward movement }
-    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin                    , Height) and
-    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin    , Height) and
-    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin    , Height) and
-    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2, Height) and
-    OverWater(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2, Height) and
+    OverWater(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin                    , Height) and
+    OverWater(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin    , Height) and
+    OverWater(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin    , Height) and
+    OverWater(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin / 2, Height) and
+    OverWater(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin / 2, Height) and
 
     { to protect backward movement }
-    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2                , Height) and
-    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
-    OverWater(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
+    OverWater(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2                , Height) and
+    OverWater(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2 + Side * Margin, Height) and
+    OverWater(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2 - Side * Margin, Height);
     // OverWater(Point + Vector3(-Margin, 0, -Margin)) and
     // OverWater(Point + Vector3(-Margin, 0,  Margin)) and
     // OverWater(Point + Vector3( Margin, 0, -Margin)) and
@@ -412,7 +412,7 @@ begin
   PlayerInput_CancelFlying.MakeClear(true);
 
   SceneManager.LoadLevel('water');
-  Player.Navigation.OnMoveAllowed := @TGame(nil).MoveAllowed;
+  Player.WalkNavigation.OnMoveAllowed := @TGame(nil).MoveAllowed;
   SceneManager.UseGlobalLights := true;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   SceneManager.Items.MainScene.Collides := false;
@@ -443,10 +443,10 @@ begin
   Window.TouchInterface := tiCtlWalkDragRotate;
   Player.EnableCameraDragging := true;
   {$else}
-  Player.Navigation.MouseLook := true;
+  Player.WalkNavigation.MouseLook := true;
   {$endif}
 
-  DefaultMoveSpeed := Player.Navigation.MoveSpeed;
+  DefaultMoveSpeed := Player.WalkNavigation.MoveSpeed;
 
   if UseDebugPart then
     LoadPart(DebugPart) else
@@ -588,12 +588,12 @@ begin
   inherited;
 
   MoveSpeedTarget := DefaultMoveSpeed * OverWaterFactor(AvatarTransform.Translation);
-  if MoveSpeedTarget > Player.Navigation.MoveSpeed then
-    Player.Navigation.MoveSpeed := Min(Player.Navigation.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
-  if MoveSpeedTarget < Player.Navigation.MoveSpeed then
-    Player.Navigation.MoveSpeed := Max(Player.Navigation.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
+  if MoveSpeedTarget > Player.WalkNavigation.MoveSpeed then
+    Player.WalkNavigation.MoveSpeed := Min(Player.WalkNavigation.MoveSpeed + SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget) else
+  if MoveSpeedTarget < Player.WalkNavigation.MoveSpeed then
+    Player.WalkNavigation.MoveSpeed := Max(Player.WalkNavigation.MoveSpeed - SecondsPassed * MoveSpeedChangeSpeed, MoveSpeedTarget);
 
-  //Writeln(Player.Navigation.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
+  //Writeln(Player.WalkNavigation.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
 
   Wind;
 
@@ -626,7 +626,7 @@ begin
 
   { we use DirectionInGravityPlane, not Direction, to never make avatar non-horizontal }
   AvatarTransform.Rotation :=
-    OrientationFromDirectionUp(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
+    OrientationFromDirectionUp(Player.WalkNavigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
   AvatarTransform.Translation := AvatarPositionFromCamera(SceneManager.Camera.Position);
 end;
@@ -687,29 +687,29 @@ begin
           VisualizeRayDown(SceneManager.Camera.Position);
 
           Point := AvatarPositionFromCamera(SceneManager.Camera.Position);
-          Side := TVector3.CrossProduct(Player.Navigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
+          Side := TVector3.CrossProduct(Player.WalkNavigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
           VisualizeRayDown(Point);
 
           Margin := MarginOverWater;
 
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
 
-          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2);
-          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 + Side * Margin);
-          VisualizeRayDown(Point - Player.Navigation.DirectionInGravityPlane * Margin * 2 - Side * Margin);
+          VisualizeRayDown(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2);
+          VisualizeRayDown(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2 + Side * Margin);
+          VisualizeRayDown(Point - Player.WalkNavigation.DirectionInGravityPlane * Margin * 2 - Side * Margin);
 
           Margin := MarginOverWater / 2;
 
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
-          VisualizeRayDown(Point + Player.Navigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin + Side * Margin / 2);
+          VisualizeRayDown(Point + Player.WalkNavigation.DirectionInGravityPlane * Margin - Side * Margin / 2);
         glEnd();
       glPopAttrib();
     glPopMatrix();
