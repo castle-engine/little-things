@@ -49,8 +49,8 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
-  CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderer,
-  CastleSceneManager, CastleColors, CastleNoise,
+  CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderOptions,
+  CastleSceneManager, CastleColors, CastleNoise, CastleRenderContext,
   CastleWindowTouch, CastleControls, CastleFrustum, CastleRectangles;
 
 type
@@ -213,12 +213,12 @@ begin
   Scene.ProcessEvents := true;
   Scene.DistanceCulling := VisibilityLimit;
 
-  Scene.Attributes.WireframeEffect := weSilhouette;
-  Scene.Attributes.WireframeColor := Vector3(0, 0, 0);
-  Scene.Attributes.LineWidth := 10;
-  Scene.Attributes.SilhouetteScale := 10.1;
-  Scene.Attributes.SilhouetteBias := 0.2;
-  // Scene.Attributes.Shaders := srAlways;
+  Scene.RenderOptions.WireframeEffect := weSilhouette;
+  Scene.RenderOptions.WireframeColor := Vector3(0, 0, 0);
+  Scene.RenderOptions.LineWidth := 10;
+  Scene.RenderOptions.SilhouetteScale := 10.1;
+  Scene.RenderOptions.SilhouetteBias := 0.2;
+  // Scene.RenderOptions.Shaders := srAlways;
 end;
 
 var
@@ -466,8 +466,8 @@ procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
   procedure ReportPolygonOffset;
   begin
     WritelnLog('GPU', 'SilhouetteScale: %f, SilhouetteBias: %f',
-      [ CurrentPartScene.Attributes.SilhouetteScale,
-        CurrentPartScene.Attributes.SilhouetteBias]);
+      [ CurrentPartScene.RenderOptions.SilhouetteScale,
+        CurrentPartScene.RenderOptions.SilhouetteBias]);
   end;
 
 var
@@ -478,37 +478,37 @@ begin
     if GpuATI then
       PolygonOffsetFactor := 1.0 else
       PolygonOffsetFactor := 0.1;
-    if Event.IsKey(K_1) then
+    if Event.IsKey(key1) then
     begin
-      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale - PolygonOffsetFactor;
+      CurrentPartScene.RenderOptions.SilhouetteScale := CurrentPartScene.RenderOptions.SilhouetteScale - PolygonOffsetFactor;
       ReportPolygonOffset;
     end;
-    if Event.IsKey(K_2) then
+    if Event.IsKey(key2) then
     begin
-      CurrentPartScene.Attributes.SilhouetteScale := CurrentPartScene.Attributes.SilhouetteScale + PolygonOffsetFactor;
+      CurrentPartScene.RenderOptions.SilhouetteScale := CurrentPartScene.RenderOptions.SilhouetteScale + PolygonOffsetFactor;
       ReportPolygonOffset;
     end;
-    if Event.IsKey(K_3) then
+    if Event.IsKey(key3) then
     begin
-      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias - PolygonOffsetFactor;
+      CurrentPartScene.RenderOptions.SilhouetteBias := CurrentPartScene.RenderOptions.SilhouetteBias - PolygonOffsetFactor;
       ReportPolygonOffset;
     end;
-    if Event.IsKey(K_4) then
+    if Event.IsKey(key4) then
     begin
-      CurrentPartScene.Attributes.SilhouetteBias := CurrentPartScene.Attributes.SilhouetteBias + PolygonOffsetFactor;
+      CurrentPartScene.RenderOptions.SilhouetteBias := CurrentPartScene.RenderOptions.SilhouetteBias + PolygonOffsetFactor;
       ReportPolygonOffset;
     end;
-    if Event.IsKey(K_5) then
+    if Event.IsKey(key5) then
     begin
       SceneManager.NavigationType := ntExamine;
     end;
-    if Event.IsKey(K_6) then
+    if Event.IsKey(key6) then
     begin
       if CurrentPart = High(CurrentPart) then
         LoadPart(Low(TPart)) else
         LoadPart(Succ(CurrentPart));
     end;
-    if Event.IsKey(K_8) then
+    if Event.IsKey(key8) then
     begin
       RenderDebug3D := not RenderDebug3D;
       GameDebug3D.Exists := RenderDebug3D;
@@ -516,22 +516,22 @@ begin
 
     if TerrainTransform <> nil then
     begin
-      if Event.IsKey(K_9) then
+      if Event.IsKey(key9) then
       begin
         TerrainTransform.Scale := TerrainTransform.Scale - Vector3(0.5, 0.5, 0.5);
         WritelnLog('Terrain', TerrainTransform.Scale.ToString);
       end;
-      if Event.IsKey(K_0) then
+      if Event.IsKey(key0) then
       begin
         TerrainTransform.Scale := TerrainTransform.Scale + Vector3(0.5, 0.5, 0.5);
         WritelnLog('Terrain', TerrainTransform.Scale.ToString);
       end;
-      if Event.IsKey(K_P) then
+      if Event.IsKey(keyP) then
       begin
         TerrainTransform.Translation := TerrainTransform.Translation - Vector3(0, 0.5, 0);
         WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
       end;
-      if Event.IsKey(K_O) then
+      if Event.IsKey(keyO) then
       begin
         TerrainTransform.Translation := TerrainTransform.Translation + Vector3(0, 0.5, 0);
         WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
@@ -539,16 +539,16 @@ begin
     end;
   end;
 
-  if Event.IsKey(K_F5) then
+  if Event.IsKey(keyF5) then
     Window.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
-  if Event.IsKey(K_Escape) then
+  if Event.IsKey(keyEscape) then
     Window.Close;
 end;
 
 function EnableDebugKeys(Container: TUIContainer): Boolean;
 begin
   { debug keys only with Ctrl }
-  Result := Container.Pressed[K_Ctrl];
+  Result := Container.Pressed[keyCtrl];
 end;
 
 { TGameUI -------------------------------------------------------------------- }
@@ -596,11 +596,6 @@ begin
   //Writeln(Player.WalkNavigation.MoveSpeed:1:10, ' for ', AvatarTransform.Translation.ToString);
 
   Wind;
-
-  { make sure CurrentPartScene knows about current camera.
-    By default, only MainScene knows about it, and we want to pass it to CurrentPartScene
-    to use CurrentPartScene.DistanceCulling. }
-  CurrentPartScene.CameraChanged(SceneManager.Camera);
 
   if (DogTransform <> nil) and
      (PointsDistanceSqr(DogTransform.Translation, SceneManager.Camera.Position) <
@@ -679,7 +674,7 @@ begin
         glDisable(GL_ALPHA_TEST); { saved by GL_ENABLE_BIT }
         glDisable(GL_FOG); { saved by GL_ENABLE_BIT }
         glEnable(GL_DEPTH_TEST);
-        TGLSLProgram.Current := nil;
+        RenderContext.CurrentProgram := nil;
 
         glColorv(Black);
 

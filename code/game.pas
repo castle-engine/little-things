@@ -68,7 +68,7 @@ var
 begin
   if EnableDebugKeys(Container) then
   begin
-    if Event.IsKey(K_7) then
+    if Event.IsKey(key7) then
     begin
       SceneManager.Camera.GetView(Pos, Dir, Up, GravityUp);
       WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));

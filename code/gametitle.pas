@@ -39,8 +39,8 @@ end;
 procedure TitlePress(Container: TUIContainer; const Event: TInputPressRelease);
 begin
   if Event.IsMouseButton(mbLeft) or
-     Event.IsKey(K_Enter) or
-     Event.IsKey(K_Escape) then
+     Event.IsKey(keyEnter) or
+     Event.IsKey(keyEscape) then
     StartGame;
 end;
 
