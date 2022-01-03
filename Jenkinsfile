@@ -46,17 +46,17 @@ pipeline {
       archiveArtifacts artifacts: 'little_things*.tar.gz,little_things*.zip,little_things*.apk'
     }
     regression {
-      mail to: 'michalis.kambi@gmail.com',
+      mail to: 'michalis@castle-engine.io',
         subject: "[jenkins] Build started failing: ${currentBuild.fullDisplayName}",
         body: "See the build details on ${env.BUILD_URL}"
     }
     failure {
-      mail to: 'michalis.kambi@gmail.com',
+      mail to: 'michalis@castle-engine.io',
         subject: "[jenkins] Build failed: ${currentBuild.fullDisplayName}",
         body: "See the build details on ${env.BUILD_URL}"
     }
     fixed {
-      mail to: 'michalis.kambi@gmail.com',
+      mail to: 'michalis@castle-engine.io',
         subject: "[jenkins] Build is again successfull: ${currentBuild.fullDisplayName}",
         body: "See the build details on ${env.BUILD_URL}"
     }
