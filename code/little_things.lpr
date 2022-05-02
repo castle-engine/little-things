@@ -1,5 +1,5 @@
 {
-  Copyright 2014-2017 Michalis Kamburelis.
+  Copyright 2014-2022 Michalis Kamburelis.
 
   This file is part of "Little Things".
 
@@ -18,7 +18,7 @@
 { "Little Things" standalone game binary. }
 program little_things;
 
-{$ifdef MSWINDOWS} {$R automatic-windows-resources.res} {$endif MSWINDOWS}
+{$ifdef CASTLE_AUTO_GENERATED_RESOURCES} {$R castle-auto-generated-resources.res} {$endif}
 
 uses CastleWindow, CastleConfig, Game, CastleParameters, CastleLog, CastleUtils,
   CastleSoundEngine;

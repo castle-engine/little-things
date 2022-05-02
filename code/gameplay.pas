@@ -1,5 +1,5 @@
 {
-  Copyright 2014-2017 Michalis Kamburelis.
+  Copyright 2014-2022 Michalis Kamburelis.
 
   This file is part of "Little Things".
 
@@ -51,7 +51,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderOptions,
   CastleSceneManager, CastleColors, CastleNoise, CastleRenderContext,
-  CastleWindowTouch, CastleControls, CastleFrustum, CastleRectangles;
+  CastleControls, CastleFrustum, CastleRectangles;
 
 type
   { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
@@ -106,16 +106,19 @@ function AvatarPositionFromCamera(const CameraPosition: TVector3): TVector3;
 begin
   Result := CameraPosition +
     Player.WalkNavigation.DirectionInGravityPlane * Player.WalkNavigation.RotationHorizontalPivot;
-  Result[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
+  Result.Items[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
 function OverWater(Point: TVector3; out Height: Single): Boolean;
 var
   Collision: TRayCollision;
+  SavedMainSceneExists, SavedAvatarExists: Boolean;
 begin
-  Point[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
-  SceneManager.Items.MainScene.Disable; // do not hit water surface
-  AvatarTransform.Disable; // do not hit avatar
+  Point.Items[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
+  SavedMainSceneExists := SceneManager.Items.MainScene.Exists;
+  SceneManager.Items.MainScene.Exists := false; // do not hit water surface
+  SavedAvatarExists := AvatarTransform.Exists;
+  AvatarTransform.Exists := false; // do not hit avatar
   try
     Collision := SceneManager.Items.WorldRay(Point, -SceneManager.Camera.GravityUp);
     Result := (Collision = nil) or
@@ -124,8 +127,8 @@ begin
       Height := Collision.First.Point[SceneManager.Items.GravityCoordinate];
     FreeAndNil(Collision);
   finally
-    SceneManager.Items.MainScene.Enable;
-    AvatarTransform.Enable;
+    SceneManager.Items.MainScene.Exists := SavedMainSceneExists;
+    AvatarTransform.Exists := SavedAvatarExists;
   end;
 end;
 
@@ -638,11 +641,11 @@ procedure TGameDebug3D.LocalRender(const Params: TRenderParams);
   {$ifndef OpenGLES} // TODO-es
   procedure VisualizeRayDown(Point: TVector3);
   begin
-    Point[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
+    Point.Items[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
 //    Writeln(Point.ToString);
     glVertexv(Point);
 
-    Point[SceneManager.Items.GravityCoordinate] := +HeightOverAvatar;
+    Point.Items[SceneManager.Items.GravityCoordinate] := +HeightOverAvatar;
 //    Writeln(Point.ToString);
     glVertexv(Point);
 

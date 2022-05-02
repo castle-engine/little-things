@@ -1,5 +1,5 @@
 {
-  Copyright 2014-2017 Michalis Kamburelis.
+  Copyright 2014-2022 Michalis Kamburelis.
 
   This file is part of "Little Things".
 
@@ -18,26 +18,29 @@ unit Game;
 
 interface
 
-uses CastleWindowTouch;
+uses CastleWindow;
 
 var
-  Window: TCastleWindowTouch;
+  Window: TCastleWindow;
 
 implementation
 
 uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
-  CastleWindow, CastleResources, CastleTerrain, CastleScene, X3DNodes,
+  CastleResources, CastleTerrain, CastleScene, X3DNodes,
   CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
   CastleRenderer, CastleTransform, CastleLevels, CastlePlayer,
-  CastleUIControls, CastleSoundEngine, CastleGLUtils,
+  CastleUIControls, CastleSoundEngine, CastleGLUtils, CastleViewport,
   GamePlay, GamePlayer, GameTitle;
 
 { One-time initialization. }
 procedure ApplicationInitialize;
 begin
   Progress.UserInterface := WindowProgressInterface;
-  SceneManager := Window.SceneManager;
+
+  SceneManager := TGameSceneManager.Create(Application);
+  SceneManager.FullSize := true;
+  Window.Controls.InsertFront(SceneManager);
 
   SoundEngine.RepositoryURL := ApplicationData('sounds/index.xml');
   SoundEngine.MusicPlayer.Volume := 0.5;
@@ -70,7 +73,8 @@ begin
   begin
     if Event.IsKey(key7) then
     begin
-      SceneManager.Camera.GetView(Pos, Dir, Up, GravityUp);
+      SceneManager.Camera.GetView(Pos, Dir, Up);
+      GravityUp := SceneManager.Camera.GravityUp;
       WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
     end;
   end;
@@ -90,7 +94,7 @@ initialization
   Application.OnInitialize := @ApplicationInitialize;
 
   { create Window and initialize Window callbacks }
-  Window := TCastleWindowTouch.Create(Application);
+  Window := TCastleWindow.Create(Application);
   Window.OnPress := @WindowPress;
   Window.FpsShowOnCaption := true;
   Application.MainWindow := Window;
