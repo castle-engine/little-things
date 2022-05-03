@@ -18,14 +18,10 @@ unit GamePlay;
 
 {$I castleconf.inc}
 
-{ $define TOUCH_INTERFACE} // useful to test TOUCH_INTERFACE on desktops
-{$ifdef ANDROID} {$define TOUCH_INTERFACE} {$endif}
-{$ifdef iOS}     {$define TOUCH_INTERFACE} {$endif}
-
 interface
 
 uses CastleScene, CastleTransform, X3DNodes, CastlePlayer, CastleLevels,
-  CastleKeysMouse, CastleUIControls;
+  CastleKeysMouse, CastleUIControls, CastleApplicationProperties;
 
 type
   TPart = (pForest, pCave, pLake, pIsland);
@@ -51,7 +47,7 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderOptions,
   CastleSceneManager, CastleColors, CastleNoise, CastleRenderContext,
-  CastleControls, CastleFrustum, CastleRectangles;
+  CastleControls, CastleFrustum, CastleRectangles, CastleViewport;
 
 type
   { TODO: Remake as TUIState descendant, use TUIState for title and game states. }
@@ -385,6 +381,7 @@ procedure StartGame;
 var
   Avatar: TCastleScene;
   GameUI: TGameUI;
+  TouchNavigation: TCastleTouchNavigation;
 begin
   TitleScreen := false;
   GpuATI := (GLVersion.VendorType = gvATI) or (Pos('AMD', GLVersion.Renderer) <> -1);
@@ -440,14 +437,23 @@ begin
   Avatar.TimePlayingSpeed := 10;
   AvatarTransform.Add(Avatar);
 
-  {$ifdef TOUCH_INTERFACE}
-  // Do not use AutomaticTouchInterface, as we pretend we're flying for a hacky
-  // 3rd-person camera, and it would cause using TouchInterface for flying.
-  Window.TouchInterface := tiCtlWalkDragRotate;
-  Player.EnableCameraDragging := true;
-  {$else}
-  Player.WalkNavigation.MouseLook := true;
-  {$endif}
+  { Adjust navigation based on ApplicationProperties.TouchDevice.
+    It is automatically set based on mobile/not,
+    you can also manually force it to test e.g. mobile UI on desktop. }
+  ApplicationProperties.TouchDevice := true;
+
+  TouchNavigation := TCastleTouchNavigation.Create(SceneManager);
+  TouchNavigation.Exists := ApplicationProperties.TouchDevice;
+  { Do not use AutoTouchInterface, as we pretend we're flying for a hacky
+    3rd-person camera, so AutoTouchInterface would cause using TouchInterface for flying. }
+  TouchNavigation.TouchInterface := tiWalkRotate;
+  TouchNavigation.FullSize := true;
+  TouchNavigation.Viewport := SceneManager;
+  SceneManager.InsertFront(TouchNavigation);
+
+  Player.EnableCameraDragging := ApplicationProperties.TouchDevice;
+
+  Player.WalkNavigation.MouseLook := not ApplicationProperties.TouchDevice;
 
   DefaultMoveSpeed := Player.WalkNavigation.MoveSpeed;
 
