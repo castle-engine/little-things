@@ -440,7 +440,7 @@ begin
   { Adjust navigation based on ApplicationProperties.TouchDevice.
     It is automatically set based on mobile/not,
     you can also manually force it to test e.g. mobile UI on desktop. }
-  ApplicationProperties.TouchDevice := true;
+  //ApplicationProperties.TouchDevice := true; // uncomment to test mobile UI on desktop
 
   TouchNavigation := TCastleTouchNavigation.Create(SceneManager);
   TouchNavigation.Exists := ApplicationProperties.TouchDevice;
