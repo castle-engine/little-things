@@ -41,12 +41,12 @@ function EnableDebugKeys(Container: TUIContainer): Boolean;
 
 implementation
 
-uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
+uses SysUtils, CastleVectors, CastleLog,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
   CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderOptions,
-  CastleSceneManager, CastleColors, CastleNoise, CastleRenderContext,
+  CastleSceneManager, CastleColors, CastleInternalNoise, CastleRenderContext,
   CastleControls, CastleFrustum, CastleRectangles, CastleViewport;
 
 type
@@ -69,7 +69,8 @@ var
   GpuATI: Boolean;
 
   CurrentPart: TPart;
-  CurrentPartScene: TCastleScene;
+  CurrentPartTransform: TCastleTransform;
+  CurrentPartScene: TCastleScene; // sometimes equal to CurrentPartTransform, sometimes child of it
 
   WaterTransform: TTransformNode;
   DogTransform: TTransformNode;
@@ -220,62 +221,59 @@ begin
   // Scene.RenderOptions.Shaders := srAlways;
 end;
 
-var
-  { publicly available just for debug, to adjust params visually }
-  TerrainTransform: TTransformNode;
-
 procedure LoadPart(const Part: TPart);
 var
   PartName: string;
 
-  { Load from a TTerrain data.
+  { Load a terrain part, with some non-terrain scene on top.
     @param RealSize is the size in X and Z in world space. }
-  function LoadTerrainPart(const Terrain: TTerrain; const RealSize: Single = 31.33 * 3;
-    const YShift: Single = -19): TCastleScene;
+  function LoadTerrainPart(const TerrainData: TCastleTerrainData;
+    const RealSize: Single = 31.33 * 3;
+    const YShift: Single = -19): TCastleTransform;
   var
-    TerrainNode: TAbstractChildNode;
-    Root: TX3DRootNode;
-    Appearance: TAppearanceNode;
-    Texture: TImageTextureNode;
-    TextureTransform: TTextureTransformNode;
-    Range: TFloatRectangle;
-    Material: TMaterialNode;
+    Terrain: TCastleTerrain;
+    NonTerrainScene: TCastleScene;
+    CompleteTransform: TCastleTransform;
   const
     Size = 3;
+    BestSubdivisions = 1 shl 6 + 1;
   begin
-    Appearance := TAppearanceNode.Create;
+    CompleteTransform := TCastleTransform.Create(SceneManager);
 
-    Texture := TImageTextureNode.Create;
-    Texture.SetUrl(['castle-data:/level/textures/sand.png']);
-    Appearance.Texture := Texture;
+    Terrain := TCastleTerrain.Create(SceneManager);
+    // TODO: We use same settings for all 4 layers, we don't really utilize layers here for now
+    Terrain.Layer1.Texture := 'castle-data:/level/textures/sand.png';
+    Terrain.Layer2.Texture := 'castle-data:/level/textures/sand.png';
+    Terrain.Layer3.Texture := 'castle-data:/level/textures/sand.png';
+    Terrain.Layer4.Texture := 'castle-data:/level/textures/sand.png';
+    Terrain.Layer1.Color := YellowRGB;
+    Terrain.Layer2.Color := YellowRGB;
+    Terrain.Layer3.Color := YellowRGB;
+    Terrain.Layer4.Color := YellowRGB;
+    Terrain.Layer1.UvScale := 10;
+    Terrain.Layer2.UvScale := 10;
+    Terrain.Layer3.UvScale := 10;
+    Terrain.Layer4.UvScale := 10;
+    Terrain.Subdivisions := Vector2(BestSubdivisions, BestSubdivisions);
+    Terrain.Size := Vector2(Size * 2, Size * 2);
+    Terrain.Collides := false; // Just like ConfigureScene
+    Terrain.Data := TerrainData;
 
-    TextureTransform := TTextureTransformNode.Create;
-    TextureTransform.Scale := Vector2(10, 10);
-    Appearance.TextureTransform := TextureTransform;
-
-    Material := TMaterialNode.Create;
-    Material.DiffuseColor := Vector3(1, 1, 0); { yellow }
-    Appearance.Material := Material;
-
-    Range := FloatRectangle(-Size, -Size, Size * 2, Size * 2);
-    TerrainNode := Terrain.CreateNode(1 shl 6 + 1, Range, Range, Appearance);
-
-    TerrainTransform := TTransformNode.Create;
-    TerrainTransform.Translation := Vector3(
+    { TODO: Why the terrain randomly blinks in-out? }
+    Terrain.Translation := Vector3(
       -RealSize / 2, YShift,
       -RealSize / 2);
-    TerrainTransform.Scale := Vector3(
+    Terrain.Scale := Vector3(
       RealSize * 1/Size,
       RealSize * 1/Size,
       RealSize * 1/Size);
-    TerrainTransform.AddChildren(TerrainNode);
+    CompleteTransform.Add(Terrain);
 
-    Root := TX3DRootNode.Create;
-    Root.AddChildren(TerrainTransform);
-    Root.AddChildren(LoadNode('castle-data:/level/' + PartName + '/part_final.x3dv'));
+    NonTerrainScene := TCastleScene.Create(SceneManager);
+    NonTerrainScene.Load(ApplicationData('level/' + PartName + '/part_final.x3dv'));
+    CompleteTransform.Add(NonTerrainScene);
 
-    Result := TCastleScene.Create(SceneManager);
-    Result.Load(Root, true);
+    Result := CompleteTransform;
   end;
 
 {
@@ -296,20 +294,19 @@ var
   end;
 }
 
-  function LoadLakePart: TCastleScene;
+  function LoadLakePart: TCastleTransform;
   var
-    Terrain: TTerrainNoise;
+    Terrain: TCastleTerrainNoise;
   begin
-    Terrain := TTerrainNoise.Create;
-    try
-      Terrain.Octaves := 4.25;
-      Terrain.Smoothness := 2.35;
-      Terrain.Heterogeneous := 0.22;
-      Terrain.Amplitude := 0.75;
-      Terrain.Frequency := 0.9;
-      Terrain.Seed := 1073933886; // Random(High(LongInt)); Writeln('seed is ', Terrain.Seed);
-      Result := LoadTerrainPart(Terrain);
-    finally FreeAndNil(Terrain) end;
+    Terrain := TCastleTerrainNoise.Create(SceneManager);
+    Terrain.Octaves := 4.25;
+    Terrain.Smoothness := 2.35;
+    Terrain.Heterogeneous := 0.22;
+    Terrain.Amplitude := 0.75;
+    Terrain.Frequency := 0.9;
+    Terrain.Seed := 1073933886; // Random(High(LongInt)); Writeln('seed is ', Terrain.Seed);
+
+    Result := LoadTerrainPart(Terrain);
   end;
 
   function LoadStaticPart: TCastleScene;
@@ -322,18 +319,25 @@ var
   InitialPosition, InitialDirection, InitialUp, GravityUp: TVector3;
   NewBackground: TAbstractBackgroundNode;
 begin
-  FreeAndNil(CurrentPartScene);
-  TerrainTransform := nil;
+  FreeAndNil(CurrentPartTransform);
+  // TODO: Free also CurrentPartTransform children, in case we had 2 children loaded by LoadLakePart
 
   PartName := PartNames[Part];
 
   case Part of
-    pLake  : CurrentPartScene := LoadLakePart;
-    // pIsland: CurrentPartScene := LoadIslandPart;
-    else CurrentPartScene := LoadStaticPart;
+    pLake:
+      begin
+        CurrentPartTransform := LoadLakePart;
+        CurrentPartScene := CurrentPartTransform[1] as TCastleScene; // TODO: Assuming what LoadTerrainPart does
+      end;
+    else
+      begin
+        CurrentPartTransform := LoadStaticPart;
+        CurrentPartScene := CurrentPartTransform as TCastleScene;
+      end;
   end;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
-  CurrentPartScene.Collides := false;
+  CurrentPartTransform.Collides := false;
 
   PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
 
@@ -346,7 +350,7 @@ begin
   end;
 
   ConfigureScene(CurrentPartScene);
-  SceneManager.Items.Add(CurrentPartScene);
+  SceneManager.Items.Add(CurrentPartTransform);
 
   { do not use automatic MoveLimit from SceneManager.LoadLevel, it is not useful
     when we dynamically switch parts, and it doesn't make sense on pIsland part. }
@@ -522,30 +526,6 @@ begin
       RenderDebug3D := not RenderDebug3D;
       GameDebug3D.Exists := RenderDebug3D;
     end;
-
-    if TerrainTransform <> nil then
-    begin
-      if Event.IsKey(key9) then
-      begin
-        TerrainTransform.Scale := TerrainTransform.Scale - Vector3(0.5, 0.5, 0.5);
-        WritelnLog('Terrain', TerrainTransform.Scale.ToString);
-      end;
-      if Event.IsKey(key0) then
-      begin
-        TerrainTransform.Scale := TerrainTransform.Scale + Vector3(0.5, 0.5, 0.5);
-        WritelnLog('Terrain', TerrainTransform.Scale.ToString);
-      end;
-      if Event.IsKey(keyP) then
-      begin
-        TerrainTransform.Translation := TerrainTransform.Translation - Vector3(0, 0.5, 0);
-        WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
-      end;
-      if Event.IsKey(keyO) then
-      begin
-        TerrainTransform.Translation := TerrainTransform.Translation + Vector3(0, 0.5, 0);
-        WritelnLog('Terrain', Format('%f', [TerrainTransform.Translation[1]]));
-      end;
-    end;
   end;
 
   if Event.IsKey(keyF5) then
@@ -644,7 +624,7 @@ end;
 
 procedure TGameDebug3D.LocalRender(const Params: TRenderParams);
 
-  {$ifndef OpenGLES} // TODO-es
+  {$ifdef TODO_OLD_GL_RENDERING} // TODO rework to use TCastleRenderUnlit
   procedure VisualizeRayDown(Point: TVector3);
   begin
     Point.Items[SceneManager.Items.GravityCoordinate] := -HeightOverAvatar;
@@ -671,7 +651,7 @@ begin
     (not Params.Transparent) and
     (false in Params.ShadowVolumesReceivers) then
   begin
-    {$ifndef OpenGLES} // TODO-es
+    {$ifdef TODO_OLD_GL_RENDERING}
     glPushMatrix;
       glMultMatrix(Params.Transform^);
 

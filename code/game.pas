@@ -25,7 +25,7 @@ var
 
 implementation
 
-uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
+uses SysUtils, CastleVectors, CastleLog,
   CastleResources, CastleTerrain, CastleScene, X3DNodes,
   CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
@@ -36,23 +36,17 @@ uses SysUtils, CastleVectors, CastleLog, CastleWindowProgress, CastleProgress,
 { One-time initialization. }
 procedure ApplicationInitialize;
 begin
-  Progress.UserInterface := WindowProgressInterface;
-
   SceneManager := TGameSceneManager.Create(Application);
   SceneManager.FullSize := true;
   Window.Controls.InsertFront(SceneManager);
 
   SoundEngine.RepositoryURL := ApplicationData('sounds/index.xml');
-  SoundEngine.MusicPlayer.Volume := 0.5;
+  SoundEngine.LoopingChannel[0].Volume := 0.5;
 
   //Resources.LoadFromFiles; // cannot search recursively in Android assets
   //Levels.LoadFromFiles; // cannot search recursively in Android assets
   Levels.AddFromFile(ApplicationData('title/level.xml'));
   Levels.AddFromFile(ApplicationData('level/level.xml'));
-
-  { EnableFixedFunction is needed for debug view (Ctrl + 8) to work,
-    also water works better and faster in this case on trees (initial) level. }
-  GLFeatures.EnableFixedFunction := true;
 
   StartPlayer;
   if UseDebugPart then
