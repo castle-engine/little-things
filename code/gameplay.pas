@@ -270,7 +270,7 @@ var
     CompleteTransform.Add(Terrain);
 
     NonTerrainScene := TCastleScene.Create(SceneManager);
-    NonTerrainScene.Load(ApplicationData('level/' + PartName + '/part_final.x3dv'));
+    NonTerrainScene.Load('castle-data:/level/' + PartName + '/part_final.x3dv');
     CompleteTransform.Add(NonTerrainScene);
 
     Result := CompleteTransform;
@@ -312,7 +312,7 @@ var
   function LoadStaticPart: TCastleScene;
   begin
     Result := TCastleScene.Create(SceneManager);
-    Result.Load(ApplicationData('level/' + PartName + '/part_final.x3dv'));
+    Result.Load('castle-data:/level/' + PartName + '/part_final.x3dv');
   end;
 
 var

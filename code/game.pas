@@ -40,13 +40,13 @@ begin
   SceneManager.FullSize := true;
   Window.Controls.InsertFront(SceneManager);
 
-  SoundEngine.RepositoryURL := ApplicationData('sounds/index.xml');
+  SoundEngine.RepositoryURL := 'castle-data:/sounds/index.xml';
   SoundEngine.LoopingChannel[0].Volume := 0.5;
 
   //Resources.LoadFromFiles; // cannot search recursively in Android assets
   //Levels.LoadFromFiles; // cannot search recursively in Android assets
-  Levels.AddFromFile(ApplicationData('title/level.xml'));
-  Levels.AddFromFile(ApplicationData('level/level.xml'));
+  Levels.AddFromFile('castle-data:/title/level.xml');
+  Levels.AddFromFile('castle-data:/level/level.xml');
 
   StartPlayer;
   if UseDebugPart then
