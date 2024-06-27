@@ -76,6 +76,7 @@ initialization
   { create Window and initialize Window callbacks }
   Window := TCastleWindow.Create(Application);
   Window.FullScreen := true;
+  Window.ParseParameters; // after setting FullScreen, to allow overriding it
   Window.OnPress := @WindowPress;
   Window.FpsShowOnCaption := true;
   Application.MainWindow := Window;
