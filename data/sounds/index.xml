@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <sounds>
-  <sound name="sea_music" default_importance="max" file_name="Seashore Peace - Ambiance.ogg" stream="true" />
+  <sound name="sea_music" url="Seashore Peace - Ambiance.ogg" stream="true" />
 </sounds>
