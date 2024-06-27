@@ -2,8 +2,8 @@
 <project name="little_things"
   caption="Little Things"
   qualified_name="net.sourceforge.castleengine.littlethings"
-  standalone_source="code/little_things.lpr"
-  game_units="Game"
+  standalone_source="code/little_things.dpr"
+  game_units="GameInitialize"
 >
   <version value="1.1.4" code="9" />
   <compiler_options>

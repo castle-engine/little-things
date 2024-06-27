@@ -1,5 +1,5 @@
 {
-  Copyright 2014-2022 Michalis Kamburelis.
+  Copyright 2014-2024 Michalis Kamburelis.
 
   This file is part of "Little Things".
 
@@ -14,7 +14,7 @@
 }
 
 { Implements the game logic, independent from Android / standalone. }
-unit Game;
+unit GameInitialize;
 
 interface
 
@@ -54,11 +54,6 @@ begin
     StartTitleScreen;
 end;
 
-function MyGetApplicationName: string;
-begin
-  Result := 'little_things';
-end;
-
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
 var
   Pos, Dir, Up, GravityUp: TVector3;
@@ -79,16 +74,12 @@ begin
 end;
 
 initialization
-  { This should be done as early as possible to mark our log lines correctly. }
-  OnGetApplicationName := @MyGetApplicationName;
-
-  InitializeLog;
-
   { initialize Application callbacks }
   Application.OnInitialize := @ApplicationInitialize;
 
   { create Window and initialize Window callbacks }
   Window := TCastleWindow.Create(Application);
+  Window.FullScreen := true;
   Window.OnPress := @WindowPress;
   Window.FpsShowOnCaption := true;
   Application.MainWindow := Window;
