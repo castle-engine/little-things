@@ -30,21 +30,17 @@ const
 
 procedure LoadPart(const Part: TPart);
 
-procedure StartGame;
-procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
+procedure StartGame(const Container: TUIContainer);
+procedure GamePress(const Container: TUIContainer; const Event: TInputPressRelease);
 
-var
-  UseDebugPart: Boolean = false;
-  DebugPart: TPart = pIsland;
-
-function EnableDebugKeys(Container: TUIContainer): Boolean;
+function EnableDebugKeys(const Container: TUIContainer): Boolean;
 
 implementation
 
 uses SysUtils, CastleVectors, CastleLog,
   CastleWindow, CastleResources, CastleTerrain, CastleCameras, CastleFilesUtils,
   Math, CastleSceneCore, CastleBoxes, CastleTimeUtils,
-  CastleGL, CastleGLUtils, CastleGLShaders, Game, GamePlayer, CastleGLVersion,
+  CastleGL, CastleGLUtils, CastleGLShaders, GamePlayer, CastleGLVersion,
   CastleUtils, X3DLoad, X3DCameraUtils, CastleRenderOptions,
   CastleSceneManager, CastleColors, CastleInternalNoise, CastleRenderContext,
   CastleControls, CastleFrustum, CastleRectangles, CastleViewport;
@@ -103,7 +99,7 @@ function AvatarPositionFromCamera(const CameraPosition: TVector3): TVector3;
 begin
   Result := CameraPosition +
     Player.WalkNavigation.DirectionInGravityPlane * Player.WalkNavigation.RotationHorizontalPivot;
-  Result.Items[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
+  Result.Data[SceneManager.Items.GravityCoordinate] := WaterHeight; // constant height on the water
 end;
 
 function OverWater(Point: TVector3; out Height: Single): Boolean;
@@ -111,7 +107,7 @@ var
   Collision: TRayCollision;
   SavedMainSceneExists, SavedAvatarExists: Boolean;
 begin
-  Point.Items[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
+  Point.Data[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
   SavedMainSceneExists := SceneManager.Items.MainScene.Exists;
   SceneManager.Items.MainScene.Exists := false; // do not hit water surface
   SavedAvatarExists := AvatarTransform.Exists;
@@ -209,7 +205,7 @@ end;
 
 procedure ConfigureScene(const Scene: TCastleScene);
 begin
-  Scene.Spatial := [ssRendering, ssDynamicCollisions];
+  Scene.PreciseCollisions := true;
   Scene.ProcessEvents := true;
   Scene.DistanceCulling := VisibilityLimit;
 
@@ -341,8 +337,8 @@ begin
 
   PaintedEffect.Enabled := PartConfig[Part].PaintedEffect;
 
-  NewBackground := SceneManager.Items.MainScene.RootNode.TryFindNodeByName(
-    TAbstractBackgroundNode, 'Background' + PartName, false) as TAbstractBackgroundNode;
+  NewBackground := SceneManager.Items.MainScene.RootNode.FindNode(
+    TAbstractBackgroundNode, 'Background' + PartName, [fnNilOnMissing]) as TAbstractBackgroundNode;
   if NewBackground <> nil then
   begin
     NewBackground.EventSet_bind.Send(true);
@@ -365,8 +361,8 @@ begin
   CurrentPart := Part;
   WritelnLog('little_things', 'Switched to part ' + PartNames[Part]);
 
-  DogTransform := CurrentPartScene.RootNode.TryFindNodeByName(
-    TTransformNode, 'DogTransform', false) as TTransformNode;
+  DogTransform := CurrentPartScene.RootNode.FindNode(
+    TTransformNode, 'DogTransform', [fnNilOnMissing]) as TTransformNode;
   if DogTransform = nil then
     WritelnWarning('DogTransform', 'DogTransform not found on part ' + PartName);
 
@@ -381,7 +377,7 @@ begin
   end;}
 end;
 
-procedure StartGame;
+procedure StartGame(const Container: TUIContainer);
 var
   Avatar: TCastleScene;
   GameUI: TGameUI;
@@ -420,15 +416,15 @@ begin
   SceneManager.UseGlobalLights := true;
   { Camera should not collide with 3D, only the avatar, which is done by special code in OnMoveAllowed }
   SceneManager.Items.MainScene.Collides := false;
-  WaterTransform := SceneManager.Items.MainScene.RootNode.FindNodeByName(
-    TTransformNode, 'WaterTransform', false) as TTransformNode;
+  WaterTransform := SceneManager.Items.MainScene.RootNode.FindNode(
+    TTransformNode, 'WaterTransform', []) as TTransformNode;
   if SceneManager.Items.MainScene.NavigationInfoStack.Top <> nil then
   begin
     VisibilityLimit := SceneManager.Items.MainScene.NavigationInfoStack.Top.VisibilityLimit;
     WritelnLog('little_things', 'Using VisibilityLimit %f', [VisibilityLimit]);
   end;
-  PaintedEffect := SceneManager.Items.MainScene.RootNode.TryFindNodeByName(
-    TScreenEffectNode, 'PaintedEffect', false) as TScreenEffectNode;
+  PaintedEffect := SceneManager.Items.MainScene.RootNode.FindNode(
+    TScreenEffectNode, 'PaintedEffect', []) as TScreenEffectNode;
 
   AvatarTransform := TCastleTransform.Create(SceneManager);
   AvatarTransform.Scale := Vector3(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
@@ -440,11 +436,6 @@ begin
   Avatar.PlayAnimation('animation', true);
   Avatar.TimePlayingSpeed := 10;
   AvatarTransform.Add(Avatar);
-
-  { Adjust navigation based on ApplicationProperties.TouchDevice.
-    It is automatically set based on mobile/not,
-    you can also manually force it to test e.g. mobile UI on desktop. }
-  //ApplicationProperties.TouchDevice := true; // uncomment to test mobile UI on desktop
 
   TouchNavigation := TCastleTouchNavigation.Create(SceneManager);
   TouchNavigation.Exists := ApplicationProperties.TouchDevice;
@@ -461,12 +452,10 @@ begin
 
   DefaultMoveSpeed := Player.WalkNavigation.MoveSpeed;
 
-  if UseDebugPart then
-    LoadPart(DebugPart) else
-    LoadPart(Low(TPart));
+  LoadPart(Low(TPart));
 
   GameUI := TGameUI.Create(Application);
-  Window.Controls.InsertFront(GameUI);
+  Container.Controls.InsertFront(GameUI);
 
   GameDebug3D := TGameDebug3D.Create(Application);
   GameDebug3D.Exists := RenderDebug3D;
@@ -474,7 +463,7 @@ begin
   SceneManager.Items.Add(GameDebug3D);
 end;
 
-procedure GamePress(Container: TUIContainer; const Event: TInputPressRelease);
+procedure GamePress(const Container: TUIContainer; const Event: TInputPressRelease);
 
   procedure ReportPolygonOffset;
   begin
@@ -529,12 +518,12 @@ begin
   end;
 
   if Event.IsKey(keyF5) then
-    Window.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
+    Container.SaveScreen(FileNameAutoInc(ApplicationName + '_screen_%d.png'));
   if Event.IsKey(keyEscape) then
-    Window.Close;
+    Application.Terminate;
 end;
 
-function EnableDebugKeys(Container: TUIContainer): Boolean;
+function EnableDebugKeys(const Container: TUIContainer): Boolean;
 begin
   { debug keys only with Ctrl }
   Result := Container.Pressed[keyCtrl];
@@ -560,12 +549,12 @@ procedure TGameUI.Update(const SecondsPassed: Single;
     WindSpeed := 0.1 + BlurredInterpolatedNoise2D_Spline(WindTime / 2, 0, SeedSpeed) * 1.0;
 
     WindMove := WindDirection * WindSpeed * SecondsPassed;
-    OldPosition := SceneManager.Camera.Position;
+    OldPosition := SceneManager.Camera.Translation;
     NewPosition := OldPosition + WindMove;
 
     if OverWaterAround(AvatarPositionFromCamera(OldPosition), MarginOverWater) and
        OverWaterAround(AvatarPositionFromCamera(NewPosition), MarginOverWater) then
-      SceneManager.Camera.Position := NewPosition;
+      SceneManager.Camera.Translation := NewPosition;
   end;
 
 const
@@ -587,7 +576,7 @@ begin
   Wind;
 
   if (DogTransform <> nil) and
-     (PointsDistanceSqr(DogTransform.Translation, SceneManager.Camera.Position) <
+     (PointsDistanceSqr(DogTransform.Translation, SceneManager.Camera.Translation) <
       Sqr(DistanceToDogToFinish)) then
   begin
     if CurrentPart = High(CurrentPart) then
@@ -612,7 +601,7 @@ begin
   AvatarTransform.Rotation :=
     OrientationFromDirectionUp(Player.WalkNavigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
-  AvatarTransform.Translation := AvatarPositionFromCamera(SceneManager.Camera.Position);
+  AvatarTransform.Translation := AvatarPositionFromCamera(SceneManager.Camera.Translation);
 end;
 
 { TGameDebug3D --------------------------------------------------------------- }
@@ -641,17 +630,19 @@ procedure TGameDebug3D.LocalRender(const Params: TRenderParams);
   end;
   {$endif}
 
+{$ifdef TODO_OLD_GL_RENDERING}
 var
   Point, Side: TVector3;
   Margin: Single;
+{$endif}
 begin
   inherited;
 
+  {$ifdef TODO_OLD_GL_RENDERING}
   if GetExists and
     (not Params.Transparent) and
     (false in Params.ShadowVolumesReceivers) then
   begin
-    {$ifdef TODO_OLD_GL_RENDERING}
     glPushMatrix;
       glMultMatrix(Params.Transform^);
 
@@ -668,9 +659,9 @@ begin
         glColorv(Black);
 
         glBegin(GL_LINES);
-          VisualizeRayDown(SceneManager.Camera.Position);
+          VisualizeRayDown(SceneManager.Camera.Translation);
 
-          Point := AvatarPositionFromCamera(SceneManager.Camera.Position);
+          Point := AvatarPositionFromCamera(SceneManager.Camera.Translation);
           Side := TVector3.CrossProduct(Player.WalkNavigation.DirectionInGravityPlane, SceneManager.Camera.GravityUp);
 
           VisualizeRayDown(Point);
@@ -697,8 +688,8 @@ begin
         glEnd();
       glPopAttrib();
     glPopMatrix();
-    {$endif}
   end;
+  {$endif}
 end;
 
 end.

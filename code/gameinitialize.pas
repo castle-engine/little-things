@@ -18,20 +18,18 @@ unit GameInitialize;
 
 interface
 
-uses CastleWindow;
-
-var
-  Window: TCastleWindow;
-
 implementation
 
 uses SysUtils, CastleVectors, CastleLog,
-  CastleResources, CastleTerrain, CastleScene, X3DNodes,
+  CastleWindow, CastleResources, CastleTerrain, CastleScene, X3DNodes,
   CastleCameras, CastleFilesUtils, Math, CastleKeysMouse,
   CastleSceneCore, CastleBoxes, CastleUtils, X3DLoad, X3DCameraUtils,
-  CastleRenderer, CastleTransform, CastleLevels, CastlePlayer,
+  CastleTransform, CastleLevels, CastlePlayer,
   CastleUIControls, CastleSoundEngine, CastleGLUtils, CastleViewport,
   GamePlay, GamePlayer, GameTitle;
+
+var
+  Window: TCastleWindow;
 
 { One-time initialization. }
 procedure ApplicationInitialize;
@@ -49,9 +47,7 @@ begin
   Levels.AddFromFile('castle-data:/level/level.xml');
 
   StartPlayer;
-  if UseDebugPart then
-    StartGame else
-    StartTitleScreen;
+  StartTitleScreen;
 end;
 
 procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);

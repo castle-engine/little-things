@@ -22,7 +22,7 @@ uses CastleLevels, CastlePlayer, CastleKeysMouse, CastleUIControls;
 
 procedure StartTitleScreen;
 
-procedure TitlePress(Container: TUIContainer; const Event: TInputPressRelease);
+procedure TitlePress(const Container: TUIContainer; const Event: TInputPressRelease);
 
 implementation
 
@@ -36,12 +36,12 @@ begin
   Player.Blocked := true;
 end;
 
-procedure TitlePress(Container: TUIContainer; const Event: TInputPressRelease);
+procedure TitlePress(const Container: TUIContainer; const Event: TInputPressRelease);
 begin
   if Event.IsMouseButton(buttonLeft) or
      Event.IsKey(keyEnter) or
      Event.IsKey(keyEscape) then
-    StartGame;
+    StartGame(Container);
 end;
 
 end.
