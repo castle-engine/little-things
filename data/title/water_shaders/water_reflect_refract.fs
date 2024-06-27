@@ -11,7 +11,7 @@ vec3 getReflectedColor(vec3 dir)
 
 varying vec3 vertex_to_camera;
 
-void PLUG_texture_apply(inout vec4 fragment_color, const in vec3 normal)
+void PLUG_main_texture_apply(inout vec4 fragment_color, const in vec3 normal)
 {
   /* This will be needed to make later "refractedColor" (input to refract)
      normalize and to make "dot" when calculating refraction_amount fair.
