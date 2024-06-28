@@ -427,10 +427,12 @@ begin
     TScreenEffectNode, 'PaintedEffect', []) as TScreenEffectNode;
 
   AvatarTransform := TCastleTransform.Create(SceneManager);
+  AvatarTransform.Name := 'AvatarTransform';
   AvatarTransform.Scale := Vector3(0.3, 0.3, 0.3); // scale in code, scaling animation with cloth in Blender causes problems
   SceneManager.Items.Add(AvatarTransform);
 
   Avatar := TCastleScene.Create(SceneManager);
+  Avatar.Name := 'Avatar';
   Avatar.Load('castle-data:/avatar/avatar.kanim');
   Avatar.ProcessEvents := true;
   Avatar.PlayAnimation('animation', true);
@@ -438,6 +440,7 @@ begin
   AvatarTransform.Add(Avatar);
 
   TouchNavigation := TCastleTouchNavigation.Create(SceneManager);
+  TouchNavigation.Name := 'TouchNavigation';
   TouchNavigation.Exists := ApplicationProperties.TouchDevice;
   { Do not use AutoTouchInterface, as we pretend we're flying for a hacky
     3rd-person camera, so AutoTouchInterface would cause using TouchInterface for flying. }
@@ -455,9 +458,11 @@ begin
   LoadPart(Low(TPart));
 
   GameUI := TGameUI.Create(Application);
+  GameUI.Name := 'GameUI';
   Container.Controls.InsertFront(GameUI);
 
   GameDebug3D := TGameDebug3D.Create(Application);
+  GameDebug3D.Name := 'GameDebug3D';
   GameDebug3D.Exists := RenderDebug3D;
   GameDebug3D.Collides := false;
   SceneManager.Items.Add(GameDebug3D);
