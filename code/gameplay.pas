@@ -264,7 +264,6 @@ var
     Terrain.Collides := false; // Just like ConfigureScene
     Terrain.Data := TerrainData;
 
-    { TODO: Why the terrain randomly blinks in-out? }
     Terrain.Translation := Vector3(
       -RealSize / 2, YShift,
       -RealSize / 2);
@@ -273,6 +272,10 @@ var
       RealSize * 1/Size,
       RealSize * 1/Size);
     CompleteTransform.Add(Terrain);
+
+    // TODO: Workaround CGE bug, seems like Terrain.Scale breaks the frustum culling
+    // and terrain would blink
+    (Terrain[0] as TCastleScene).ShapeFrustumCulling := false;
 
     NonTerrainScene := TCastleScene.Create(SceneManager);
     NonTerrainScene.Load('castle-data:/level/' + PartName + '/part_final.x3dv');
