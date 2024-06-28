@@ -1,5 +1,5 @@
 {
-  Copyright 2014-2022 Michalis Kamburelis.
+  Copyright 2014-2024 Michalis Kamburelis.
 
   This file is part of "Little Things".
 
@@ -105,7 +105,9 @@ end;
 function OverWater(Point: TVector3; out Height: Single): Boolean;
 var
   Collision: TRayCollision;
+  HitInfo: TRayCollisionNode;
   SavedMainSceneExists, SavedAvatarExists: Boolean;
+  HitPoint: TVector3;
 begin
   Point.Data[SceneManager.Items.GravityCoordinate] := HeightOverAvatar;
   SavedMainSceneExists := SceneManager.Items.MainScene.Exists;
@@ -113,12 +115,19 @@ begin
   SavedAvatarExists := AvatarTransform.Exists;
   AvatarTransform.Exists := false; // do not hit avatar
   try
+    // first, assume we're over water, i.e. nothing will be hit by query below
+    Result := true;
+
     Collision := SceneManager.Items.WorldRay(Point, -SceneManager.Camera.GravityUp);
-    Result := (Collision = nil) or
-              (Collision.First.Point[SceneManager.Items.GravityCoordinate] < WaterHeight);
-    if not Result then
-      Height := Collision.First.Point[SceneManager.Items.GravityCoordinate];
-    FreeAndNil(Collision);
+    try
+      if (Collision <> nil) and Collision.Info(HitInfo) then
+      begin
+        HitPoint := HitInfo.Item.LocalToWorld(HitInfo.Point);
+        Result := HitPoint[SceneManager.Items.GravityCoordinate] < WaterHeight;
+        if not Result then
+          Height := HitPoint[SceneManager.Items.GravityCoordinate];
+      end;
+    finally FreeAndNil(Collision) end;
   finally
     SceneManager.Items.MainScene.Exists := SavedMainSceneExists;
     AvatarTransform.Exists := SavedAvatarExists;
