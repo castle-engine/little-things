@@ -50,7 +50,14 @@ begin
   StartTitleScreen;
 end;
 
-procedure WindowPress(Container: TUIContainer; const Event: TInputPressRelease);
+type
+  { View to contain whole UI and to handle events, like updates.
+    TODO: We should split logic, into TViewTitle, TViewPlay in this game. }
+  TMyView = class(TCastleView)
+    function Press(const Event: TInputPressRelease): Boolean; override;
+  end;
+
+function TMyView.Press(const Event: TInputPressRelease): Boolean;
 var
   Pos, Dir, Up, GravityUp: TVector3;
 begin
@@ -61,14 +68,18 @@ begin
       SceneManager.Camera.GetView(Pos, Dir, Up);
       GravityUp := SceneManager.Camera.GravityUp;
       WritelnLog('Camera', MakeCameraStr(cvVrml2_X3d, false, Pos, Dir, Up, GravityUp));
+      Exit(true);
     end;
   end;
 
   if TitleScreen then
-    TitlePress(Container, Event) else
+    TitlePress(Container, Event)
+  else
     GamePress(Container, Event);
 end;
 
+var
+  MyView: TMyView;
 initialization
   { initialize Application callbacks }
   Application.OnInitialize := @ApplicationInitialize;
@@ -77,7 +88,10 @@ initialization
   Window := TCastleWindow.Create(Application);
   Window.FullScreen := true;
   Window.ParseParameters; // after setting FullScreen, to allow overriding it
-  Window.OnPress := @WindowPress;
   Window.FpsShowOnCaption := true;
+
+  MyView := TMyView.Create(Application);
+  Window.Container.View := MyView;
+
   Application.MainWindow := Window;
 end.
