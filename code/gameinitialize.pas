@@ -61,6 +61,9 @@ function TMyView.Press(const Event: TInputPressRelease): Boolean;
 var
   Pos, Dir, Up, GravityUp: TVector3;
 begin
+  Result := inherited;
+  if Result then Exit;
+
   if EnableDebugKeys(Container) then
   begin
     if Event.IsKey(key7) then
